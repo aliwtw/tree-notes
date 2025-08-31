@@ -1,0 +1,169 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+    width: 100%;
+    position: relative;
+}
+
+table#content {
+    border-collapse: collapse;
+    width: 99%;
+}
+
+#heading div {
+    font-size: x-large;
+    font-weight: bolder;
+    text-align: center;
+}
+
+#text {
+    border-right: black dashed 1px;
+    width: 30%;
+    height: 100%;
+}
+
+#text .container {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    position: relative;
+    height: 80vh;
+    cursor: auto;
+    overflow-y: scroll;
+}
+
+
+
+#tree {
+    width: 70%;
+}
+
+#tree .container {
+    position: relative;
+    width: 100%;
+    height: 80vh;
+    cursor: default;
+    overflow: scroll;
+}
+
+.zoom {
+    transform-origin: left bottom;
+    transition: transform 0.3s ease-in-out;
+}
+
+#tree .box {
+    background-color: #f1f1f1;
+    border-left: dotted rgba(0, 0, 0, 0.2) 1px;
+    border-bottom: dotted rgba(0, 0, 0, 0.2) 1px;
+    position: absolute;
+    text-align:left;
+    padding: 10px;
+    border-radius: 10px;
+    user-select: none;
+    max-width: 20%;
+    left: 100px;
+    top: 100px;
+    transition: box-shadow 0.3s ease-in-out;
+    outline: none;
+    overflow: hidden;
+}
+
+.boxFooter {
+    position: absolute;
+    left: 2px;
+    top: -18px;
+    color: black;
+}
+
+.glow {
+    box-shadow: 0 0 20px 8px var(--glow-color, black);
+}
+
+#tree svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1; /* Behind the divs */
+}
+
+#notes {
+    cursor: default;
+    border-top: black dashed 1px;
+}
+
+#notesText {
+    height: 20vh;
+    padding: 10px;
+    overflow-y: scroll;
+}
+
+#tools{
+    z-index: 100;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    display: block;
+}
+
+.toolbar {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 0 2px;
+}
+
+.highlight {
+    cursor: pointer;
+    border-radius: 25%;
+}
+
+.line {
+    stroke-width: 2;
+    stroke: gray;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Container for the dropdown */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown content - hidden by default */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    min-width: max-content;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+/* Style for each item in the dropdown */
+.dropdown-item {
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    color: black;
+}
+
+/* Hover effect on dropdown items */
+.dropdown-item:hover {
+    background-color: #ddd;
+}
+
+/* Show the dropdown when it's active */
+.dropdown.show .dropdown-content {
+    display: block;
+}

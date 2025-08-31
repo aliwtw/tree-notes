@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <title>Tree Notes</title>
+</head>
+<body>
+
+    <table id="content">
+        <tr>
+            <td colspan="2" id="heading">
+                <div contenteditable="true">
+                    Enter your heading
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td id="text">
+                <div class="container" contenteditable="true">
+                    <p>Text area....</p>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt culpa velit...</p>
+                </div>
+            </td>
+            <td id="tree">
+                <div class="container">
+                    <!-- Tool bar -->
+                    <div style="position: absolute; left: 0; top: 0; z-index: 10;">
+                        <button onclick="createNewBlock()">➕</button>
+                        <button title="Zoom In" onclick="zoom(1.1)">🔍</button>
+                        <button title="Zoom Out" onclick="zoom(0.9)">🔎</button>
+                        <button onclick="download()">💾</button>
+                        <button onclick="upload()">⬆️</button>
+                        <button onclick="ai()">✨</button>
+                    </div>
+
+                    <div id="zoom" class="zoom">
+                        <!-- Draggable divs -->
+                        <div id="boxes">
+                            <div id="1" class="box" contenteditable="true" style="background-color: #f1f1f1;">Seed</div>
+                        </div>
+
+                        <!-- SVG for drawing lines -->
+                        <svg id="lines" width="3000px" height="3000px">
+                        </svg>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td id="notes" colspan="2">
+                <div id="notesText" contenteditable="true">
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Tools Section -->
+
+    <!-- Box Toolbar -->
+    <div id="toolbar" class="toolbar">
+        <input id="boxColor" type="color" aria-label="Box Color">
+        <button id="addBox">+</button>
+        <button id="deleteBox">🗑️</button>
+        <div id="link" class="dropdown">
+            <button class="dropdown-button">🖇️</button>
+            <div class="dropdown-content">
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Toolbar -->
+    <div id="textToolbar" class="toolbar">
+        <input id="t_boxColor" type="color" value="#ffffff" aria-label="Highlight Color">
+        <select id="t_dropdown">
+            <!-- Options will be added dynamically -->
+        </select>
+        <button id="t_remove">-</button>
+    </div>
+
+</body>
+</html>
