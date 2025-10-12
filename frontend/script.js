@@ -162,6 +162,31 @@ function createNewBlock(x = 0, y = 20, content = "New Box") {
     return newBox;
 }
 
+// --------------------------------------------------------------------------
+// Placeholder Text Functionality
+// --------------------------------------------------------------------------
+const headingText = document.getElementById("heading");
+const defaultText = document.getElementById("text");
+const notesField = document.getElementById("notes");
+
+inputField.addEventListener("input", function() {
+    if (headingText.value !== "") {
+        headingText.style.display = "none";
+    } else {
+        headingText.style.display = "block";
+    }
+    if (defaultText.value !== "") {
+        defaultText.style.display = "none";
+    } else {
+        defaultText.style.display = "block";
+    }
+    if (notesField.value !== "") {
+        notesField.style.display = "none";
+    } else {
+        notesField.style.display = "block";
+    }
+});
+
 /**
  * Deletes a specified box and all the lines connected to it.
  * @param {HTMLElement} box - The box element to be deleted.

@@ -12,28 +12,31 @@
     <table id="content">
         <tr>
             <td colspan="2" id="heading">
-                <div contenteditable="true">
-                    Enter your heading
+                <div contenteditable="true" padding="20px" placeholder="Cornell Note Heading" style="font-size: 24px; font-weight: bold;">
+                    <break></break>
+                    <p>Cornell Note Heading</p>
+                    <break></break>
                 </div>
             </td>
         </tr>
         <tr>
             <td id="text">
-                <div class="container" contenteditable="true">
-                    <p>Text area....</p>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sunt culpa velit...</p>
+                <div class="container" contenteditable="true" placeholder="Type anything here, cue column data, key words, key questions" style="height: 500px; overflow-y: auto;">
+                    <p>Type anything here, cue column data, key words, key questions</p>
                 </div>
             </td>
             <td id="tree">
                 <div class="container">
                     <!-- Tool bar -->
                     <div style="position: absolute; left: 0; top: 0; z-index: 10;">
-                        <button onclick="createNewBlock()">➕</button>
-                        <button title="Zoom In" onclick="zoom(1.1)">🔍</button>
-                        <button title="Zoom Out" onclick="zoom(0.9)">🔎</button>
-                        <button onclick="download()">💾</button>
-                        <button onclick="upload()">⬆️</button>
-                        <button onclick="ai()">✨</button>
+                        <button class="button" onclick="treeNotes()">🌳</button>
+                        <button class="button" onclick="createNewBlock()">➕Add Box</button>
+                        <button class="button" title="Zoom In" onclick="zoom(1.1)">🔍Zoom In</button>
+                        <button class="button" title="Zoom Out" onclick="zoom(0.9)">🔎Zoom Out</button>
+                        <button class="button" onclick="download()">💾 Download</button>
+                        <button class="button" onclick="upload()">⬆️ Upload</button>
+                        <button class="button" onclick="ai()">✨AI Tools</button>
+                        <button class="button" onclick="noteInfo()">📝 Note Info</button>
                     </div>
 
                     <div id="zoom" class="zoom">
@@ -52,6 +55,7 @@
         <tr>
             <td id="notes" colspan="2">
                 <div id="notesText" contenteditable="true">
+                    <p>Type your summary here...</p>
                 </div>
             </td>
         </tr>
@@ -62,10 +66,10 @@
     <!-- Box Toolbar -->
     <div id="toolbar" class="toolbar">
         <input id="boxColor" type="color" aria-label="Box Color">
-        <button id="addBox">+</button>
-        <button id="deleteBox">🗑️</button>
+        <button id="addBox">Add Box+</button>
+        <button id="deleteBox">Delete Box🗑️</button>
         <div id="link" class="dropdown">
-            <button class="dropdown-button">🖇️</button>
+            <button class="dropdown-button">Link 🖇️</button>
             <div class="dropdown-content">
             </div>
         </div>
@@ -73,7 +77,7 @@
 
     <!-- Text Toolbar -->
     <div id="textToolbar" class="toolbar">
-        <input id="t_boxColor" type="color" value="#ffffff" aria-label="Highlight Color">
+        <input id="t_boxColor" type="color" value="#eeeeee" aria-label="Highlight Color">
         <select id="t_dropdown">
             <!-- Options will be added dynamically -->
         </select>
