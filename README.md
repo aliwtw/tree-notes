@@ -6,9 +6,9 @@
 
 ## 1. **Project Overview**
 
-TreeNotes is an **open-source** web application designed to help students, researchers, and professionals capture, organize, and interconnect ideas effectively.
+TreeNotes is a **[free open-source software (FOSS)](https://en.wikipedia.org/wiki/Free_and_open-source_software)** web application designed to help students, researchers, and professionals capture, organize, and interconnect ideas effectively.
 
-It combines the **Stanford Note-Taking Method** with a **network-based knowledge model**, where each note becomes a “node” in a graph, and relationships between ideas are represented as links between these nodes. This lets users visualize and explore how their notes and concepts relate, rather than seeing them as isolated entries.
+It combines the **Cornell Note-Taking Method** (used in top institutions such as [Stanford](https://ctl.stanford.edu/students/cornell-method-taking-notes) and [Harvard](https://academicresourcecenter.harvard.edu/2023/10/02/note-taking/)) with a **network-based knowledge model**, where each note becomes a “node” in a graph, and relationships between ideas are represented as links between these nodes. This lets users visualize and explore how their notes and concepts relate, rather than seeing them as isolated entries.
 
 An **AI module** powered by **Large Language Models (LLMs)** through **Ollama** will analyze note content, automatically create nodes for key ideas, and establish links between related concepts. Users can also manually create and connect notes for full control over their knowledge map.
 
@@ -32,6 +32,7 @@ An **AI module** powered by **Large Language Models (LLMs)** through **Ollama** 
 3. **Graph Visualization** – Interactive network map showing relationships.
 4. **Semantic Search** – Use AI to find relevant notes by meaning, not just keywords.
 5. **User Interface Improvements** – More intuitive linking and navigation tools.
+6. **Data Integrity** - FOSS software allows users to take control of their own data.
 
 ---
 
