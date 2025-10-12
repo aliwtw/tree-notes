@@ -6,7 +6,7 @@
 
 ## 1. **Project Overview**
 
-TreeNotes is a **[free open-source software (FOSS)](https://en.wikipedia.org/wiki/Free_and_open-source_software)** web application designed to help students, researchers, and professionals capture, organize, and interconnect ideas effectively.
+TreeNotes is a **[free open-source software (FOSS)](https://en.wikipedia.org/wiki/Free_and_open-source_software)** web application designed to help students, researchers, and professionals in all fields of study capture, organize, and interconnect ideas effectively.
 
 It combines the **Cornell Note-Taking Method** (used in top institutions such as [Stanford](https://ctl.stanford.edu/students/cornell-method-taking-notes) and [Harvard](https://academicresourcecenter.harvard.edu/2023/10/02/note-taking/)) with a **network-based knowledge model**, where each note becomes a “node” in a graph, and relationships between ideas are represented as links between these nodes. This lets users visualize and explore how their notes and concepts relate, rather than seeing them as isolated entries.
 
