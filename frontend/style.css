@@ -174,7 +174,7 @@ html {
     background-color: #ddd;
 }
 
-/* Show the dropdown when it's active */
+/*  Show the dropdown when it's active  */
 .dropdown.show .dropdown-content {
     display: block;
 }
