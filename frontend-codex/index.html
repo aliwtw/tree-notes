@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <title>Tree Notes</title>
+</head>
+<body>
+
+    <!-- Floating App Menu -->
+    <div id="appMenu" style="position: fixed; top: 10px; left: 10px; z-index: 1000;">
+        <img src="TreenotesICON.png" alt="Menu" id="menuIcon" style="width: 48px; height: 48px; cursor: pointer;">
+        <div id="menuPopup" style="display:none; position:absolute; background:white; border:1px solid #ccc; border-radius:5px; padding:10px;">
+            <p><strong>📘 TreeNotes Menu</strong></p>
+            <button onclick="toggleDarkMode()">🌓 Toggle Dark Mode</button><br>
+            <button onclick="alert('Coming soon!')">❓ Help</button><br>
+            <button onclick="alert('Coming soon!')">ℹ️ About</button>
+        </div>
+    </div>
+
+    <table id="content">
+        <tr>
+            <td colspan="2" id="heading">
+                <div id="headingText" contenteditable="true" data-placeholder="Cornell Note Heading">
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td id="text">
+                <div class="container" id="cueText" contenteditable="true" data-placeholder="Cue column data, key words, key questions">
+                </div>
+            </td>
+            <td id="tree">
+                <div class="container">
+                    <div id="toolbarBar">
+                        <button class="button" onclick="createNewBlock()">➕</button>
+                        <button class="button" onclick="zoom(1.1)">🔍</button>
+                        <button class="button" onclick="zoom(0.9)">🔎</button>
+                        <button class="button" onclick="download()">💾</button>
+                        <button class="button" onclick="upload()">⬆️</button>
+                        <button class="button" onclick="ai()">✨</button>
+                        <button class="button" onclick="noteInfo()">📝</button>
+                    </div>
+
+                    <div id="treeQuickMenu" class="tree-menu" role="menu" aria-hidden="true">
+                        <img src="logo/TreenotesICON.png" alt="Tree Notes menu icon" class="tree-menu__icon">
+                        <button type="button" class="tree-menu__item" data-action="info">Info</button>
+                        <button type="button" class="tree-menu__item" data-action="help">Help</button>
+                        <button type="button" class="tree-menu__item" data-action="dark">Toggle Dark Mode</button>
+                    </div>
+
+                    <div id="zoom" class="zoom">
+                        <div id="boxes">
+                            <div id="1" class="box" contenteditable="true" style="background-color: #f1f1f1;">Seed</div>
+                        </div>
+                        <svg id="lines" width="3000px" height="3000px"></svg>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td id="notes" colspan="2">
+                <div id="notesText" contenteditable="true" data-placeholder="Type your summary here..."></div>
+            </td>
+        </tr>
+    </table>
+
+    <div id="toolbar" class="toolbar">
+        <input id="boxColor" type="color" aria-label="Box Color">
+        <button id="addBox">Add Box+</button>
+        <button id="deleteBox">Delete Box🗑️</button>
+        <div id="link" class="dropdown">
+            <button class="dropdown-button">Link 🖇️</button>
+            <div class="dropdown-content"></div>
+        </div>
+    </div>
+
+
+    <div id="textToolbar" class="toolbar">
+        <input id="t_boxColor" type="color" value="#eeeeee" aria-label="Highlight Color">
+        <select id="t_dropdown"></select>
+        <button id="t_remove">-</button>
+    </div>
+</body>
+</html>
