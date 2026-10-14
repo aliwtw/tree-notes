@@ -996,14 +996,6 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
   const [loading, setLoading] = useState(false);
   // Handles graph generation errors //
   const [error, setError] = useState("");
-  // =========================================================
-  // AI PROCESSING / INTERPRETABILITY
-  // =========================================================
-  const [aiProcessingSteps, setAiProcessingSteps] = useState([]);
-  const [aiProcessingModalOpen, setAiProcessingModalOpen] = useState(false);
-  const [aiProcessingStatus, setAiProcessingStatus] = useState("");
-  const [aiProcessingComplete, setAiProcessingComplete] = useState(false);
-  const [aiProcessingMock, setAiProcessingMock] = useState(false);
   // References the HTML div where Cytoscape renders //
   const graphContainerRef = useRef(null);
   // References the Graph Editor container for focus management //
@@ -1211,6 +1203,160 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
     }
   }
 
+  function applyEdgeRoute(edge, curved, distance = 0) {
+    edge.removeStyle("curve-style control-point-distances control-point-weights");
+
+    edge.data("parallelRoute", curved ? "curved" : "straight");
+    edge.data("curveDistance", distance);
+
+    if (curved) {
+      edge.style({"curve-style": "unbundled-bezier", "control-point-distances": distance, "control-point-weights": 0.5});
+    } else {
+      edge.style({"curve-style": "straight"});
+    }
+  }
+
+  function syncParallelEdgeRouting(cy) {
+    if (!cy) {
+      return;
+    }
+
+    /*
+      Only real semantic edges participate in collision detection.
+
+      Annotation edges must NOT count as parallel edges themselves,
+      otherwise every edge with a qualifier/check/etc would appear
+      to have several parallel connections.
+    */
+
+    const semanticEdges = cy.edges().filter((edge) => {
+      return (!edge.data("graphInternal") && !isInternalConditionOwnerEdge(edge));
+    });
+
+    const groups = new Map();
+
+    semanticEdges.forEach((edge) => {
+      const sourceId = edge.source().id();
+      const targetId = edge.target().id();
+      const canonicalSource = sourceId < targetId ? sourceId : targetId;
+      const canonicalTarget = sourceId < targetId ? targetId : sourceId;
+      const key = `${canonicalSource}::${canonicalTarget}`;
+      if (!groups.has(key)) {
+        groups.set(key, {sourceId: canonicalSource, targetId: canonicalTarget, edges: []});
+      }
+
+      groups.get(key).edges.push(edge);
+    });
+
+    /*
+      Reset everything first.
+    */
+
+    semanticEdges.forEach((edge) => {
+      edge.data({parallelGroupSize: 1, parallelSlot: 0});
+      applyEdgeRoute(edge, false, 0);
+    });
+
+    /*
+      Only groups containing multiple semantic edges curve.
+    */
+
+    groups.forEach((group) => {
+      const edges = [...group.edges].sort((a, b) =>
+        a.id().localeCompare(b.id())
+      );
+
+      if (edges.length < 2) {
+        return;
+      }
+
+      /*
+        Work out how annotation-heavy this set of parallel edges is.
+
+        Internal annotation edges include things such as:
+          - qualifier
+          - adjunct
+          - affirmative / negative classification marker
+
+        More annotation detail means we give the parallel curves
+        a little more physical separation.
+      */
+      const getAnnotationCount = (semanticEdge) => {
+        return cy
+          .edges("[graphInternal]")
+          .filter(
+            (annotation) =>
+              annotation.data("semanticEdgeId") === semanticEdge.id()
+          )
+          .length;
+      };
+
+      const maxAnnotationCount = Math.max(
+        0,
+        ...edges.map((edge) => getAnnotationCount(edge))
+      );
+
+      /*
+        Base spacing is wider than before.
+
+        Simple pair:
+          ~64px total spacing calculation
+
+        Annotation-heavy pair:
+          can rise toward ~88px.
+
+        We cap it so a busy relationship does not become an enormous bow.
+      */
+      const baseSpacing = 64;
+      const annotationBonus = Math.max(0, maxAnnotationCount - 1) * 8;
+      const spacing = Math.min(88, baseSpacing + annotationBonus);
+      const centre = (edges.length - 1) / 2;
+
+      edges.forEach((edge, index) => {
+        const parallelSlot = index - centre;
+        edge.data({parallelGroupSize: edges.length, parallelSlot});
+        const physicalOffset = (index - centre) * spacing;
+
+        /*
+          Because reversing source/target reverses the edge's normal,
+          compensate so A -> B and B -> A appear on opposite physical
+          sides rather than collapsing onto each other.
+        */
+        const directionSign =
+          edge.source().id() === group.sourceId
+            ? 1
+            : -1;
+        const distance = physicalOffset * directionSign;
+        if (Math.abs(distance) < 1) {
+          applyEdgeRoute(edge, false, 0);
+        } else {
+          applyEdgeRoute(edge, true, distance);
+        }
+      });
+    });
+
+    /*
+      Critical part:
+      qualifier, adjunct, affirmative/negative marker and any other
+      internal annotation edge must use EXACTLY the same route as
+      its semantic parent.
+    */
+
+    cy.edges("[graphInternal]").forEach((annotation) => {
+      const semanticEdgeId = annotation.data("semanticEdgeId");
+      if (!semanticEdgeId) {
+        return;
+      }
+      const semanticEdge = cy.getElementById(semanticEdgeId);
+      if (!semanticEdge || semanticEdge.empty()) {
+        return;
+      }
+      const curved = semanticEdge.data("parallelRoute") === "curved";
+      const distance = Number(semanticEdge.data("curveDistance") || 0);
+      applyEdgeRoute(annotation, curved, distance);
+    });
+  }
+
   function refreshConnectedEdgeLabels(node) {
     if (!node || node.empty()) {
       return;
@@ -1317,11 +1463,6 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
     setNodePropertiesModalOpen(false);
     setEdgePropertiesModalOpen(false);
     nodeImageTargetIdRef.current = null;
-    setAiProcessingSteps([]);
-    setAiProcessingModalOpen(false);
-    setAiProcessingStatus("");
-    setAiProcessingComplete(false);
-    setAiProcessingMock(false);
     // Clear UI state and references belonging to linking mode.
     linkModeRef.current = false;
     firstNodeToLinkRef.current = null;
@@ -1617,6 +1758,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         const targetPosition = edge.target().position();
         const deltaX = targetPosition.x - sourcePosition.x;
         const deltaY = targetPosition.y - sourcePosition.y;
+        const isCurved = edge.data("parallelRoute") === "curved";
         const absX = Math.abs(deltaX);
         const absY = Math.abs(deltaY);
         const edgeLength = Math.max(1, Math.hypot(deltaX, deltaY));
@@ -1628,7 +1770,21 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         const hasQualifier = Boolean(qualifier.trim());
         const hasAdjuncts = Boolean(adjunctText);
         const crowdLane = crowdingLaneMap.get(edge.id()) || 0;
-        const crowdExtra = crowdLane * 11;
+        const parallelGroupSize = Number(edge.data("parallelGroupSize") || 1);
+        const isParallelGroup = parallelGroupSize > 1;
+
+        /*
+          Parallel edges already have their own physical lanes.
+
+          Do not apply the generic crowding displacement again,
+          otherwise the straight centre edge of an odd-number
+          parallel group gets pushed much farther away than its
+          curved siblings.
+        */
+        const crowdExtra =
+          isParallelGroup
+            ? 0
+            : crowdLane * 11;
         let relationshipMarginX = 0;
         let relationshipMarginY = -11;
         let qualifierMarginX = 0;
@@ -1636,7 +1792,127 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         let adjunctMarginX = 0;
         let adjunctMarginY = hasQualifier ? 24 : 11;
 
-        if (isVertical) {
+        if (isCurved && isVertical) {
+          const length = Math.hypot(deltaX, deltaY) || 1;
+
+          /*
+            Physical normal of the edge.
+
+            For a near-vertical edge this points mostly left/right.
+          */
+          const routeNormalX = -deltaY / length;
+          const curveDistance = Number(edge.data("curveDistance") || 0);
+
+          /*
+            Determine which physical side of the centre line
+            this Bezier actually occupies.
+
+            Using both routeNormalX and curveDistance keeps this
+            correct even when source/target direction is reversed.
+          */
+          let physicalSide = Math.sign(routeNormalX * curveDistance);
+
+          if (physicalSide === 0) {
+            physicalSide = 1;
+          }
+
+          /*
+            Measure the entire annotation bundle.
+
+            We use the widest item so relationship, qualifier and
+            adjunct form one neat vertical column rather than each
+            having a different horizontal centre.
+          */
+          const relationshipHalfWidth = measureEdgeLabelHalfWidth(relationship, 12);
+          const qualifierHalfWidth = measureEdgeLabelHalfWidth(qualifier, 9);
+          const adjunctHalfWidth = measureEdgeLabelHalfWidth(adjunctText, 9);
+          const bundleHalfWidth = Math.max(relationshipHalfWidth, qualifierHalfWidth, adjunctHalfWidth, 18);
+          const classified = classification === "negative" || classification === "affirmative";
+
+          /*
+            Move the whole bundle OUTSIDE its curve.
+
+            This is the important difference from the old code.
+            We are no longer shifting it by just a fraction of the
+            Bezier distance. We account for the actual text width.
+          */
+          const outsideGap = classified ? 22 : 18;
+          const bundleMarginX = physicalSide * (bundleHalfWidth + outsideGap);
+          relationshipMarginX = bundleMarginX;
+          qualifierMarginX = bundleMarginX;
+          adjunctMarginX = bundleMarginX;
+
+          /*
+            Stack the semantic text vertically.
+
+                relationship
+                qualifier
+                adjunct
+
+            The classification tick/cross remains directly on
+            the actual edge because its annotation edge receives
+            no text-margin override here.
+          */
+          if (hasQualifier && hasAdjuncts) {
+            relationshipMarginY = -17;
+            qualifierMarginY = 0;
+            adjunctMarginY = 14;
+          } else if (hasQualifier || hasAdjuncts) {
+            relationshipMarginY = -11;
+
+            if (hasQualifier) {
+              qualifierMarginY = 10;
+              adjunctMarginY = 0;
+            } else {
+              qualifierMarginY = 0;
+              adjunctMarginY = 10;
+            }
+          } else {
+            relationshipMarginY = -8;
+            qualifierMarginY = 0;
+            adjunctMarginY = 0;
+          }
+        } else if (isCurved) {
+          const length = Math.hypot(deltaX, deltaY) || 1;
+
+          /*
+            Physical normal of the straight source -> target chord.
+          */
+          const routeNormalX = -deltaY / length;
+          const routeNormalY = deltaX / length;
+
+          /*
+            curveDistance already tells us which physical side
+            this particular Bezier occupies.
+
+            Multiplying the normal by its sign therefore gives us
+            a vector pointing OUTWARD from the centre line toward
+            this edge's own curve.
+
+            This works regardless of source -> target direction.
+          */
+          const curveDistance = Number(edge.data("curveDistance") || 0);
+          const curveSide = Math.sign(curveDistance) || 1;
+          const outwardX = routeNormalX * curveSide;
+          const outwardY = routeNormalY * curveSide;
+          const classified = classification === "negative" || classification === "affirmative";
+
+          /*
+            Keep the relationship closest to the curve.
+
+            Qualifier and adjunct progressively move farther
+            outward so the ✓ / × can remain directly on the edge.
+          */
+          const relationshipOffset = classified ? 19 : 14;
+          const qualifierOffset = relationshipOffset + 13;
+          const adjunctOffset = qualifierOffset + (hasQualifier ? 12 : 0);
+          relationshipMarginX = outwardX * relationshipOffset;
+          relationshipMarginY = outwardY * relationshipOffset;
+          qualifierMarginX = outwardX * qualifierOffset;
+          qualifierMarginY = outwardY * qualifierOffset;
+          adjunctMarginX = outwardX * adjunctOffset;
+          adjunctMarginY = outwardY * adjunctOffset;
+        } else if (isVertical) {
           /*
             Keep vertical relationships horizontal. Busy neighbouring vertical
             edges progressively move their annotation lanes farther from the
@@ -4237,7 +4513,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         "target-arrow-color": graphTheme.edgeArrow,
         "target-arrow-shape": "triangle",
         "line-style": "solid",
-        "curve-style": "bezier",
+        "curve-style": "straight",
         "control-point-step-size": 40,
         color: graphTheme.edgeLabel,
         opacity: 0.8,
@@ -4398,1534 +4674,6 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         "underlay-padding": 6,
       })
       .update();
-  }
-
-  function addStreamEdge(edgeData) {
-    const cy = cyRef.current;
-    if (!cy || !edgeData) {
-      return false;
-    }
-    edgeData = normaliseIncomingEdgeData(edgeData);
-    const sourceId = String(edgeData.source ?? "");
-    const targetId = String(edgeData.target ?? "");
-    if (!sourceId || !targetId) {
-      console.warn("Streamed edge is missing source/target:", edgeData);
-      return false;
-    }
-    const sourceNode = cy.getElementById(sourceId);
-    const targetNode = cy.getElementById(targetId);
-
-    /*
-      An edge cannot safely be added until both
-      of its nodes exist.
-    */
-
-    if (sourceNode.empty() || targetNode.empty()) {
-      return false;
-    }
-
-    /*
-      Hans should ideally provide edge IDs.
-
-      This fallback gives us something usable
-      during development if he doesn't yet.
-    */
-
-    const edgeId = String(edgeData.id || `ai-edge-${sourceId}-${targetId}-${edgeData.relationship || "link"}`);
-    const existing = cy.getElementById(edgeId);
-
-    /*
-      If this edge already exists, update it
-      instead of creating a duplicate.
-    */
-
-    if (!existing.empty()) {
-      existing.data({
-        ...existing.data(),
-        ...edgeData,
-        id: edgeId,
-        source: sourceId,
-        target: targetId,
-      });
-      syncConditionalGraphSemantics(cy);
-      return true;
-    }
-    cy.add({
-      group: "edges",
-      data: {
-        ...edgeData,
-        id: edgeId,
-        source: sourceId,
-        target: targetId,
-      },
-    });
-    syncConditionalGraphSemantics(cy);
-    return true;
-  }
-
-  function getStreamNodePosition() {
-    const cy = cyRef.current;
-    if (!cy) {
-      return {
-        x: 0,
-        y: 0,
-      };
-    }
-
-    /*
-      On the first streamed node, capture the centre
-      of the currently visible Cytoscape viewport.
-
-      All subsequent temporary positions are based
-      around this point.
-    */
-
-    if (!streamAnchorRef.current) {
-      const extent = cy.extent();
-      streamAnchorRef.current = {
-        x: (extent.x1 + extent.x2) / 2,
-        y: (extent.y1 + extent.y2) / 2,
-      };
-    }
-    const anchor = streamAnchorRef.current;
-    const index = streamNodeIndexRef.current++;
-
-    /*
-      First node goes directly into the centre.
-    */
-
-    if (index === 0) {
-      return {
-        ...anchor,
-      };
-    }
-
-    /*
-      Place later nodes in a loose spiral.
-
-      These are ONLY temporary positions while
-      generation is underway.
-    */
-
-    const goldenAngle = 137.508 * (Math.PI / 180);
-    const angle = index * goldenAngle;
-    const radius = 90 + Math.sqrt(index) * 65;
-    return {
-      x: anchor.x +
-        Math.cos(angle) * radius,
-      y: anchor.y +
-        Math.sin(angle) * radius,
-    };
-  }
-
-  function focusStreamElements(elements) {
-    const cy = cyRef.current;
-    if (!cy || !elements || elements.empty()) {
-      return;
-    }
-
-    /*
-      Stop any previous viewport animation so a newly
-      streamed element immediately becomes the focus.
-    */
-
-    cy.stop();
-
-    /*
-      Keep a fairly stable viewing zoom during streaming.
-
-      We don't want every individual node to fill the
-      entire Graph View.
-    */
-
-    const focusZoom = Math.min(Math.max(cy.zoom(), 0.95), 1.15);
-    cy.animate({
-      center: {
-        eles: elements,
-      },
-      zoom: focusZoom,
-    }, {
-      duration: 350,
-      easing: "ease-in-out-cubic",
-    });
-  }
-
-  function flushPendingStreamEdges() {
-    const cy = cyRef.current;
-    if (!cy || pendingStreamEdgesRef.current.length === 0) {
-      return;
-    }
-    const stillPending = [];
-    for (const edgeData of pendingStreamEdgesRef.current) {
-      const added = addStreamEdge(edgeData);
-      if (!added) {
-        stillPending.push(edgeData);
-      }
-    }
-    pendingStreamEdgesRef.current = stillPending;
-  }
-
-  function normaliseAiProcessingStep(event) {
-    const data = event?.data && typeof event.data === "object" ? event.data : event || {};
-    const stepValue = data.step ?? event?.step ?? data.index ?? event?.index ?? (aiProcessingSteps.length + 1);
-    const numericStep = Number.isFinite(Number(stepValue)) ? Number(stepValue) : aiProcessingSteps.length + 1;
-    const fallback = AI_PROCESSING_STAGE_FALLBACKS[numericStep] || {};
-    const contentValue = data.content ?? data.output ?? data.result ?? event?.content ?? event?.message ?? "";
-    return {
-      id: String(data.id ?? event?.id ?? `ai-processing-${numericStep}`),
-      step: numericStep,
-      title: String(data.title ?? data.name ?? event?.title ?? fallback.title ?? `Processing step ${numericStep}`),
-      description: String(data.description ?? data.task ?? event?.description ?? fallback.description ?? "AI processing output"),
-      content: Array.isArray(contentValue) ? contentValue.map(item => String(item)).join("\n")
-        : String(contentValue ?? ""),
-    };
-  }
-
-  function addAiProcessingStep(event) {
-    const nextStep = normaliseAiProcessingStep(event);
-    setAiProcessingSteps(current => {
-      const existingIndex = current.findIndex(item => item.id === nextStep.id || item.step === nextStep.step);
-      const next = [...current];
-      if (existingIndex >= 0) {
-        next[existingIndex] = { ...next[existingIndex], ...nextStep };
-      } else {
-        next.push(nextStep);
-      }
-      return next.sort((a, b) => a.step - b.step);
-    });
-    setAiProcessingStatus(nextStep.title);
-    setAiProcessingComplete(false);
-    setAiProcessingMock(false);
-  }
-
-  function loadAiProcessingMockPreview() {
-    setAiProcessingSteps(AI_PROCESSING_MOCK_STEPS);
-    setAiProcessingStatus("Mock processing preview");
-    setAiProcessingComplete(true);
-    setAiProcessingMock(true);
-  }
-
-  function handleGraphStreamEvent(event) {
-    const cy = cyRef.current;
-    if (!cy || !event) {
-      return;
-    }
-    console.log("Graph stream event:", event);
-    switch (event.type) {
-      // =====================================================
-      // STREAM STARTED
-      // =====================================================
-      case "start": {
-
-        /*
-          Generate Graph currently replaces the existing
-          generated graph, so preserve that behaviour.
-
-          We clear the graph once when the stream begins,
-          NOT every time an element arrives.
-        */
-
-        cy.elements().remove();
-        pendingStreamEdgesRef.current = [];
-        streamAnchorRef.current = null;
-        streamNodeIndexRef.current = 0;
-        cy.elements().unselect();
-        setSelectedNode(null);
-        setSelectedEdge(null);
-        setSelectionSummary({
-          nodes: [],
-          edges: [],
-        });
-        setShapeMenuOpen(false);
-        setNodeBorderStyleMenuOpen(false);
-        setEdgeStyleMenuOpen(false);
-        setArrowShapeMenuOpen(false);
-        setGraphFeedback(null);
-        setAiProcessingSteps([]);
-        setAiProcessingStatus("Starting AI processing…");
-        setAiProcessingComplete(false);
-        setAiProcessingMock(false);
-        console.log("AI graph stream started.");
-        break;
-      }
-      // =====================================================
-      // STREAMED NODE
-      // =====================================================
-      case "node": {
-        const nodeData = normaliseIncomingNodeData(event.data || {});
-        if (!nodeData?.id) {
-          console.warn("Streamed node has no id:", event);
-          break;
-        }
-        const nodeId = String(nodeData.id);
-        const existingNode = cy.getElementById(nodeId);
-        let node;
-
-        /*
-          Update existing node if the backend repeats
-          or enriches it later in the stream.
-        */
-
-        if (!existingNode.empty()) {
-          existingNode.data({
-            ...existingNode.data(),
-            ...nodeData,
-            id: nodeId,
-          });
-          node = existingNode;
-        } else {
-          node = cy.add({
-              group: "nodes",
-              data: {
-                ...nodeData,
-                id: nodeId,
-                label: nodeData.label || nodeId,
-              },
-
-              /*
-                Give the new node a temporary stable position.
-
-                Existing streamed nodes are NOT rearranged.
-              */
-
-              position: getStreamNodePosition(),
-            });
-        }
-
-        /*
-          Apply TreeNotes' existing automatic node sizing.
-        */
-
-        resizeNodeToLabel(node);
-
-        /*
-          A newly arrived node might unlock an edge that
-          had to wait for this endpoint.
-        */
-
-        flushPendingStreamEdges();
-        syncConditionalGraphSemantics(cy);
-        cy.style().update();
-
-        /*
-          Smoothly move the viewport to the node
-          that has just appeared.
-        */
-
-        focusStreamElements(node);
-        break;
-      }
-      // =====================================================
-      // STREAMED EDGE
-      // =====================================================
-      case "edge": {
-        const incomingEdgeData = event.data;
-        if (!incomingEdgeData) {
-          break;
-        }
-        const expandedEdges = expandIncomingEdgeData(incomingEdgeData);
-        for (const edgeData of expandedEdges) {
-          const added = addStreamEdge(edgeData);
-
-          /*
-            If the required nodes have not arrived yet,
-            hold this edge temporarily.
-          */
-
-          if (!added) {
-            const pendingId = edgeData.id;
-            const alreadyWaiting = pendingStreamEdgesRef.current
-              .some((edge) => pendingId && edge.id === pendingId);
-            if (!alreadyWaiting) {
-              pendingStreamEdgesRef.current.push(edgeData);
-            }
-            continue;
-          }
-          const sourceNode = cy.getElementById(String(edgeData.source));
-          const targetNode = cy.getElementById(String(edgeData.target));
-          if (!sourceNode.empty() && !targetNode.empty()) {
-            const connectedNodes = sourceNode.union(targetNode);
-            focusStreamElements(connectedNodes);
-          }
-        }
-        syncConditionalGraphSemantics(cy);
-        break;
-      }
-      // =====================================================
-      // AI PROCESSING / INTERPRETABILITY STEP
-      // =====================================================
-      case "processing":
-      case "processing_step":
-      case "process":
-      case "interpretation":
-      case "trace": {
-        addAiProcessingStep(event);
-        break;
-      }
-      // =====================================================
-      // OPTIONAL STATUS MESSAGE
-      // =====================================================
-      case "status": {
-        console.log("AI graph status:", event.message);
-        if (event?.step != null || event?.data?.step != null || event?.content != null ||
-          event?.data?.content != null) {
-          addAiProcessingStep(event);
-        } else if (event?.message) {
-          setAiProcessingStatus(String(event.message));
-        }
-        break;
-      }
-      // =====================================================
-      // STREAM COMPLETE
-      // =====================================================
-      case "done": {
-        flushPendingStreamEdges();
-        if (pendingStreamEdgesRef.current.length > 0) {
-          console.warn("Graph stream finished with unresolved edges:", pendingStreamEdgesRef.current);
-        }
-        syncConditionalGraphSemantics(cy);
-
-        /*
-          Final layout now that the complete graph
-          has arrived.
-        */
-
-        if (!cy.elements().empty()) {
-          runCompactGraphLayout(cy, {
-            animate: true,
-            padding: 50,
-            randomize: true,
-          });
-        }
-        const semanticNodeCount = cy.nodes().filter(node => !node.data("graphInternal")).length;
-        const semanticEdgeCount = cy.edges().filter(edge => !edge.data("graphInternal")).length;
-        showGraphFeedback(`Graph generated: ${semanticNodeCount} nodes, ${semanticEdgeCount} links`, "success");
-        setAiProcessingStatus("Processing complete");
-        setAiProcessingComplete(true);
-        console.log("AI graph stream complete.");
-        break;
-      }
-      // =====================================================
-      // STREAM ERROR
-      // =====================================================
-      case "error": {
-        const message = event.message || "Unable to generate graph.";
-        setError(message);
-        setAiProcessingStatus("Generation stopped");
-        setAiProcessingComplete(false);
-        console.error("AI graph stream error:", message);
-        break;
-      }
-      default: {
-        console.warn("Unknown graph stream event:", event);
-      }
-    }
-  }
-  async function testGraphStreaming() {
-    const wait = (milliseconds) =>
-      new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-    const emit = async (event, delay = 180) => {
-      handleGraphStreamEvent(event);
-      await wait(delay);
-    };
-
-    const makeMockImage = (title, background, accent) =>
-      `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
-          <defs>
-            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="${background}"/>
-              <stop offset="100%" stop-color="${accent}"/>
-            </linearGradient>
-          </defs>
-          <rect width="800" height="500" fill="url(#bg)"/>
-          <circle cx="150" cy="140" r="90" fill="rgba(255,255,255,0.14)"/>
-          <circle cx="660" cy="360" r="130" fill="rgba(255,255,255,0.10)"/>
-          <text x="400" y="265" text-anchor="middle" fill="white"
-            font-family="Arial, sans-serif" font-size="62" font-weight="700">
-            ${title}
-          </text>
-        </svg>
-      `)}`;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      await emit({ type: "start" }, 250);
-
-      // -----------------------------------------------------
-      // Processing / interpretability events
-      // -----------------------------------------------------
-
-      await emit({
-        type: "processing",
-        data: {
-          step: 1,
-          title: "Source text",
-          description: "Read mock ecosystem notes.",
-          content:
-            "Beavers build dams with mud and sticks. Wetlands absorb floodwater. During drought, ponds retain deeper water. When predators are nearby, beavers retreat to lodges and avoid open banks.",
-        },
-      });
-
-      await emit({
-        type: "processing",
-        data: {
-          step: 2,
-          title: "Extract semantic units",
-          description: "Identify entities, conditions, and relationships.",
-          content:
-            "Entities: Beavers, Dam, Pond, River, Wetlands, Fish, Frogs, Floodwater, Flood Risk, Lodge, Predators, Open Bank. Conditions: heavy rain, drought, predators nearby.",
-        },
-      });
-
-      await emit({
-        type: "processing",
-        data: {
-          step: 7,
-          title: "Classify graph semantics",
-          description: "Assign conditions, classifications, adjuncts, and reification roles.",
-          content:
-            "Includes standard, negative, affirmative, conditional and reification edges.",
-        },
-      });
-
-      // -----------------------------------------------------
-      // Core nodes
-      // -----------------------------------------------------
-
-      await emit({
-        type: "node",
-        data: {
-          id: "beavers",
-          label: "Beavers",
-          nodeType: "standard",
-          shape: "round-rectangle",
-          imageSrc: makeMockImage("BEAVERS", "#315c4c", "#183b32"),
-          imageWidth: 800,
-          imageHeight: 500,
-          imageFit: "cover",
-          imagePositionX: "50%",
-          imagePositionY: "50%",
-          imageSize: "medium",
-          showImageLabel: true,
-        },
-      });
-
-      // Intentionally arrives before Dam to test the pending-edge queue.
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-beavers-dam",
-          source: "beavers",
-          target: "dam",
-          relationship: "build",
-          qualifier: "across streams",
-          adjuncts: ["with mud", "with sticks"],
-          classification: "affirmative",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "dam",
-          label: "Dam",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "river",
-          label: "River",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-dam-river",
-          source: "dam",
-          target: "river",
-          relationship: "slows",
-          adjuncts: ["during strong flow"],
-          classification: "",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "pond",
-          label: "Pond",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-dam-pond",
-          source: "dam",
-          target: "pond",
-          relationship: "creates",
-          qualifier: "behind the dam",
-          classification: "",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "wetlands",
-          label: "Wetlands",
-          nodeType: "standard",
-          shape: "round-rectangle",
-          imageSrc: makeMockImage("WETLAND", "#176b6b", "#1f3f67"),
-          imageWidth: 800,
-          imageHeight: 500,
-          imageFit: "cover",
-          imagePositionX: "50%",
-          imagePositionY: "50%",
-          imageSize: "medium",
-          showImageLabel: true,
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "pollution",
-          label: "Pollution",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-wetlands-pollution",
-          source: "wetlands",
-          target: "pollution",
-          relationship: "filter",
-          qualifier: "before it reaches the river",
-          adjuncts: ["through vegetation", "over time"],
-          classification: "affirmative",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "fish",
-          label: "Fish",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "frogs",
-          label: "Frogs",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-pond-fish",
-          source: "pond",
-          target: "fish",
-          relationship: "supports",
-          qualifier: "as habitat",
-          adjuncts: ["among submerged vegetation"],
-          classification: "affirmative",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-pond-frogs",
-          source: "pond",
-          target: "frogs",
-          relationship: "supports",
-          adjuncts: ["among reeds"],
-          classification: "",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "vegetation",
-          label: "Aquatic Vegetation",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "oxygen",
-          label: "Dissolved Oxygen",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-vegetation-oxygen",
-          source: "vegetation",
-          target: "oxygen",
-          relationship: "increases",
-          qualifier: "during daylight",
-          adjuncts: ["through photosynthesis"],
-          classification: "affirmative",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-pollution-oxygen",
-          source: "pollution",
-          target: "oxygen",
-          relationship: "improves",
-          qualifier: "in heavily polluted water",
-          classification: "negative",
-          edgeRole: "standard",
-        },
-      });
-
-      // -----------------------------------------------------
-      // Conditional group 1: Heavy rain
-      // -----------------------------------------------------
-
-      await emit({
-        type: "node",
-        data: {
-          id: "cond-heavy-rain",
-          label: "When heavy rain falls",
-          nodeType: "conditional",
-          conditionOwnerId: "wetlands",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "floodwater",
-          label: "Floodwater",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "flood-risk",
-          label: "Flood Risk",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-heavy-absorb",
-          source: "cond-heavy-rain",
-          target: "floodwater",
-          relationship: "absorb",
-          qualifier: "rapidly",
-          adjuncts: ["across the floodplain"],
-          classification: "affirmative",
-          edgeRole: "standard",
-          conditionId: "cond-heavy-rain",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-heavy-risk",
-          source: "cond-heavy-rain",
-          target: "flood-risk",
-          relationship: "reduce",
-          qualifier: "downstream",
-          adjuncts: ["by storing excess water"],
-          classification: "affirmative",
-          edgeRole: "standard",
-          conditionId: "cond-heavy-rain",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-heavy-reification",
-          source: "floodwater",
-          target: "flood-risk",
-          relationship: "therefore reduces",
-          qualifier: "as water is retained",
-          adjuncts: ["during peak rainfall"],
-          classification: "",
-          edgeRole: "reification",
-          conditionId: "cond-heavy-rain",
-          fromEdgeId: "e-heavy-absorb",
-          toEdgeId: "e-heavy-risk",
-        },
-      });
-
-      // -----------------------------------------------------
-      // Conditional group 2: Drought
-      // -----------------------------------------------------
-
-      await emit({
-        type: "node",
-        data: {
-          id: "cond-drought",
-          label: "During drought",
-          nodeType: "conditional",
-          conditionOwnerId: "pond",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "deep-water",
-          label: "Deeper Water",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-drought-water",
-          source: "cond-drought",
-          target: "deep-water",
-          relationship: "retain",
-          adjuncts: ["in shaded pools", "near the lodge"],
-          classification: "affirmative",
-          edgeRole: "standard",
-          conditionId: "cond-drought",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-drought-fish",
-          source: "cond-drought",
-          target: "fish",
-          relationship: "support",
-          qualifier: "for longer",
-          adjuncts: ["despite lower river flow"],
-          classification: "affirmative",
-          edgeRole: "standard",
-          conditionId: "cond-drought",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-drought-frogs",
-          source: "cond-drought",
-          target: "frogs",
-          relationship: "support",
-          qualifier: "in exposed shallows",
-          adjuncts: ["when pools shrink"],
-          classification: "negative",
-          edgeRole: "standard",
-          conditionId: "cond-drought",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-drought-reification",
-          source: "deep-water",
-          target: "fish",
-          relationship: "helps preserve",
-          adjuncts: ["through the dry period"],
-          classification: "",
-          edgeRole: "reification",
-          conditionId: "cond-drought",
-          fromEdgeId: "e-drought-water",
-          toEdgeId: "e-drought-fish",
-        },
-      });
-
-      // -----------------------------------------------------
-      // Conditional group 3: Predators nearby
-      // -----------------------------------------------------
-
-      await emit({
-        type: "node",
-        data: {
-          id: "predators",
-          label: "Predators",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "lodge",
-          label: "Lodge",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "open-bank",
-          label: "Open Bank",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-beavers-predators",
-          source: "beavers",
-          target: "predators",
-          relationship: "approach",
-          qualifier: "normally",
-          classification: "negative",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "node",
-        data: {
-          id: "cond-predators",
-          label: "When predators are nearby",
-          nodeType: "conditional",
-          conditionOwnerId: "beavers",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-predators-lodge",
-          source: "cond-predators",
-          target: "lodge",
-          relationship: "retreat to",
-          qualifier: "quickly",
-          adjuncts: ["through the underwater entrance"],
-          classification: "affirmative",
-          edgeRole: "standard",
-          conditionId: "cond-predators",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-predators-bank",
-          source: "cond-predators",
-          target: "open-bank",
-          relationship: "forage on",
-          qualifier: "while exposed",
-          adjuncts: ["near the waterline"],
-          classification: "negative",
-          edgeRole: "standard",
-          conditionId: "cond-predators",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-predators-reification",
-          source: "open-bank",
-          target: "lodge",
-          relationship: "instead favours",
-          classification: "",
-          edgeRole: "reification",
-          conditionId: "cond-predators",
-          fromEdgeId: "e-predators-bank",
-          toEdgeId: "e-predators-lodge",
-        },
-      });
-
-      // One final unrelated branch so layout is not just three stars.
-      await emit({
-        type: "node",
-        data: {
-          id: "insects",
-          label: "Aquatic Insects",
-          nodeType: "standard",
-        },
-      });
-
-      await emit({
-        type: "edge",
-        data: {
-          id: "e-frogs-insects",
-          source: "frogs",
-          target: "insects",
-          relationship: "consume",
-          adjuncts: ["at the pond edge"],
-          classification: "",
-          edgeRole: "standard",
-        },
-      });
-
-      await emit({
-        type: "processing",
-        data: {
-          step: 8,
-          title: "Validate graph elements",
-          description: "Confirm streamed nodes and edges can be resolved.",
-          content:
-            "Mock graph complete. Verify pending edges, conditional placement, classifications, adjuncts, image nodes and reification links.",
-        },
-      });
-
-      await emit({ type: "done" }, 0);
-    } catch (error) {
-      console.error("Mock graph stream failed:", error);
-      handleGraphStreamEvent({
-        type: "error",
-        message: error?.message || "Mock graph stream failed.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-  async function testGraphStreamingHans() {
-    const wait = (milliseconds) =>
-      new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-    const emit = async (event, delay = 180) => {
-      handleGraphStreamEvent(event);
-      await wait(delay);
-    };
-
-    const events = [
-      {
-        type: "start",
-      },
-
-      // ============================================================
-      // Nodes
-      // ============================================================
-
-      {
-        type: "node",
-        data: {
-          id: "beavers",
-          label: "Beavers",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "dams",
-          label: "Dams",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "wolves",
-          label: "Wolves",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "it-easily",
-          label: "It easily",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "bears",
-          label: "Bears",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "underwater-entrance",
-          label: "Underwater entrance",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "bark",
-          label: "Bark",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "twigs",
-          label: "Twigs",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "trees",
-          label: "Trees",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "can-break",
-          label: "Can break",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "pond",
-          label: "Pond",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "drains",
-          label: "Drains",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "mud",
-          label: "Mud",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "sticks",
-          label: "Sticks",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "people",
-          label: "People",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "strong-front-teeth",
-          label: "Strong front teeth",
-          nodeType: "standard",
-          conditionOwnerId: "",
-        },
-      },
-
-      // Conditional nodes
-
-      {
-        type: "node",
-        data: {
-          id: "condition-dams-when-the-stream-floods",
-          label: "When the stream floods",
-          nodeType: "conditional",
-          conditionOwnerId: "dams",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "condition-pond-when-the-stream-floods",
-          label: "When the stream floods",
-          nodeType: "conditional",
-          conditionOwnerId: "pond",
-        },
-      },
-      {
-        type: "node",
-        data: {
-          id: "condition-beavers-if-the-dam-leaks",
-          label: "If the dam leaks",
-          nodeType: "conditional",
-          conditionOwnerId: "beavers",
-        },
-      },
-
-      // ============================================================
-      // Standard edges
-      // ============================================================
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-build-dams",
-          source: "beavers",
-          target: "dams",
-          relationship: "build",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: ["across streams"],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-building-dams",
-          source: "beavers",
-          target: "dams",
-          relationship: "building",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [
-            "across streams",
-            "slows the water down",
-          ],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "wolves-cannot-reach-it-easily",
-          source: "wolves",
-          target: "it-easily",
-          relationship: "cannot reach",
-          qualifier: "",
-          classification: "negative",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "bears-cannot-reach-it-easily",
-          source: "bears",
-          target: "it-easily",
-          relationship: "cannot reach",
-          qualifier: "",
-          classification: "negative",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-have-underwater-entrance",
-          source: "beavers",
-          target: "underwater-entrance",
-          relationship: "have",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-having-underwater-entrance",
-          source: "beavers",
-          target: "underwater-entrance",
-          relationship: "having",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [
-            "keeps the family warm in winter",
-          ],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-eat-bark",
-          source: "beavers",
-          target: "bark",
-          relationship: "eat",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-eat-twigs",
-          source: "beavers",
-          target: "twigs",
-          relationship: "eat",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-cut-down-trees",
-          source: "beavers",
-          target: "trees",
-          relationship: "cut down",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [
-            "with strong front teeth",
-          ],
-        },
-      },
-
-      // ============================================================
-      // Conditional edges
-      // ============================================================
-
-      {
-        type: "edge",
-        data: {
-          id: "condition-dams-when-the-stream-floods-can-break",
-          source: "condition-dams-when-the-stream-floods",
-          target: "can-break",
-          relationship: "",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "condition-dams-when-the-stream-floods",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "condition-pond-when-the-stream-floods-drains",
-          source: "condition-pond-when-the-stream-floods",
-          target: "drains",
-          relationship: "",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "condition-pond-when-the-stream-floods",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "condition-beavers-if-the-dam-leaks-patch-it-with-mud",
-          source: "condition-beavers-if-the-dam-leaks",
-          target: "mud",
-          relationship: "patch it with",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "condition-beavers-if-the-dam-leaks",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "condition-beavers-if-the-dam-leaks-patch-it-with-sticks",
-          source: "condition-beavers-if-the-dam-leaks",
-          target: "sticks",
-          relationship: "patch it with",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "condition-beavers-if-the-dam-leaks",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      // ============================================================
-      // Remaining standard edges
-      // ============================================================
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-cause-problems-for-people",
-          source: "beavers",
-          target: "people",
-          relationship: "cause problems for",
-          qualifier: "",
-          classification: "",
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      {
-        type: "edge",
-        data: {
-          id: "beavers-strong-front-teeth",
-          source: "beavers",
-          target: "strong-front-teeth",
-          relationship: "",
-          qualifier: "",
-
-          // Preserved from Hans's original stream.
-          // Current TreeNotes may normalise this to a neutral edge.
-          classification: "possession",
-
-          edgeRole: "standard",
-          conditionId: "",
-          fromEdgeId: "",
-          toEdgeId: "",
-          adjuncts: [],
-        },
-      },
-
-      // ============================================================
-      // Reification edge
-      // ============================================================
-
-      {
-        type: "edge",
-        data: {
-          id: "reif-beavers-have-underwater-entrance-allowing-beavers-having-underwater-entrance",
-          source: "underwater-entrance",
-          target: "underwater-entrance",
-          relationship: "allowing",
-          qualifier: "",
-          classification: "",
-          edgeRole: "reification",
-          conditionId: "",
-          fromEdgeId: "beavers-have-underwater-entrance",
-          toEdgeId: "beavers-having-underwater-entrance",
-          adjuncts: [],
-        },
-      },
-
-      // Actual events replayed above:
-      // 19 nodes, 16 valid edges.
-      {
-        type: "done",
-        nodes: 19,
-        edges: 16,
-      },
-    ];
-
-    for (const event of events) {
-      await emit(
-        event,
-        event.type === "done" ? 0 : 180
-      );
-    }
   }
   // =========================================================
   // CYTOSCAPE INITIALISATION
@@ -6201,7 +4949,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
             "line-color": graphTheme.edge,
             "target-arrow-color": graphTheme.edgeArrow,
             "target-arrow-shape": "triangle",
-            "curve-style": "bezier",
+            "curve-style": "straight",
             "control-point-step-size": 40,
             opacity: 0.8,
             "arrow-scale": 1.1,
@@ -6913,7 +5661,33 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
       syncRelationshipOverlay();
       syncEdgeLabelGeometry(cy);
     });
+    // =========================================================
+    // DOUBLE CLICK NODE = RENAME NODE
+    // =========================================================
+    let parallelRouteFrame = null;
+    const resyncParallelEdgeRouting = () => {
+      if (parallelRouteFrame !== null) {
+        cancelAnimationFrame(parallelRouteFrame);
+      }
+
+      parallelRouteFrame = requestAnimationFrame(() => {
+        parallelRouteFrame = null;
+
+        if (!cy || cy.destroyed()) return;
+
+        syncParallelEdgeRouting(cy);
+        syncEdgeLabelGeometry(cy);
+      });
+    };
+
+    cy.on("add", "edge", resyncParallelEdgeRouting);
+    cy.on("remove", "edge", resyncParallelEdgeRouting);
     return () => {
+      cy.off("add", "edge", resyncParallelEdgeRouting);
+      cy.off("remove", "edge", resyncParallelEdgeRouting);
+      if (parallelRouteFrame !== null) {
+        cancelAnimationFrame(parallelRouteFrame);
+      }
       themeObserver.disconnect();
       cy.destroy();
       cyRef.current = null;
@@ -8859,23 +7633,10 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         <div className="graph-header-status-slot">
           {error ? (<span className="graph-header-error" title={error}>
             {error}
-          </span>) : loading && aiProcessingStatus ? (<span className="graph-header-status" title={aiProcessingStatus}>
-            {aiProcessingStatus}
           </span>) : null}
         </div>
 
         <div className="graph-generation-actions">
-          <button type="button" className={`panel-focus-button graph-processing-info-button tooltip-align-right ${loading
-            ? "graph-processing-info-button-live"
-            : ""}`} onClick={() => setAiProcessingModalOpen(true)} aria-label="View AI processing details" aria-haspopup="dialog" aria-expanded={aiProcessingModalOpen} data-tooltip="View AI processing details">
-            <Info size={18} strokeWidth={1.9} aria-hidden="true" />
-
-            {loading && (<span className="graph-processing-live-dot" aria-hidden="true" />)}
-
-            {aiProcessingSteps.length > 0 && (<span className="graph-processing-step-count" aria-label={`${aiProcessingSteps.length} processing steps available`}>
-              {aiProcessingSteps.length > 9 ? "9+" : aiProcessingSteps.length}
-            </span>)}
-          </button>
 
           <button type="button" className="graph-generate-button primary-action" onClick={generateGraph} disabled={loading}>
             <Sparkles strokeWidth={1.8} />
@@ -9304,76 +8065,6 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
               <span />
               <span />
             </span>
-          </div>
-        </div>)}
-
-        {aiProcessingModalOpen && (<div className="graph-image-modal-backdrop" onPointerDown={(event) => {
-          if (event.target === event.currentTarget) {
-            setAiProcessingModalOpen(false);
-          }
-        }}>
-          <div className="graph-image-modal graph-ai-processing-modal" role="dialog" aria-modal="true" aria-labelledby="graph-ai-processing-modal-title" onPointerDown={(event) => event.stopPropagation()}>
-            <div className="graph-image-modal-header">
-              <div id="graph-ai-processing-modal-title" className="graph-image-modal-title">
-                <Info size={18} strokeWidth={1.9} />
-                <span>AI Processing Details</span>
-              </div>
-
-              <button type="button" className="graph-image-modal-close" onClick={() => setAiProcessingModalOpen(false)} aria-label="Close AI processing details">
-                <X size={17} strokeWidth={1.9} />
-              </button>
-            </div>
-
-            <div className="graph-image-modal-body graph-ai-processing-modal-body">
-              <div className="graph-ai-processing-summary">
-                <div>
-                  <strong>Graph interpretation trace</strong>
-                  <span>
-                    Read-only feedback showing how the AI interpreted the raw notes before creating graph elements.
-                  </span>
-                </div>
-
-                <span className={`graph-ai-processing-state ${loading
-                  ? "is-live" : aiProcessingComplete ? "is-complete" : ""}`}>
-                  {aiProcessingMock ? "Mock preview" : loading ? "Processing" : aiProcessingComplete ? "Complete"
-                        : "Waiting"}
-                </span>
-              </div>
-
-              {aiProcessingSteps.length === 0 ? (<div className="graph-ai-processing-empty">
-                <Info size={26} strokeWidth={1.5} />
-                <strong>
-                  {loading ? "Waiting for processing details…" : "No processing trace is available yet."}
-                </strong>
-                <span>
-                  Once processing-step events are streamed, they will appear here as read-only stages.
-                </span>
-
-                {SHOW_AI_PROCESSING_MOCK && !loading && (<button type="button" className="graph-ai-processing-mock-button" onClick={loadAiProcessingMockPreview}>
-                  Preview mock processing data
-                </button>)}
-              </div>) : (<div className="graph-ai-processing-list">
-                {aiProcessingSteps.map((step, index) => (<article className="graph-ai-processing-step" key={step.id}>
-                  <div className="graph-ai-processing-step-marker">
-                    {step.step || index + 1}
-                  </div>
-
-                  <div className="graph-ai-processing-step-main">
-                    <div className="graph-ai-processing-step-heading">
-                      <div>
-                        <strong>{step.title}</strong>
-                        <span>{step.description}</span>
-                      </div>
-                      <Check size={16} strokeWidth={2} aria-hidden="true" />
-                    </div>
-
-                    <pre className="graph-ai-processing-output">
-                      {step.content || "No output returned for this stage."}
-                    </pre>
-                  </div>
-                </article>))}
-              </div>)}
-            </div>
           </div>
         </div>)}
 

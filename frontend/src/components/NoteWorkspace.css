@@ -614,71 +614,11 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* ---------------------------------------------------------
-   Raw Notes editor
-   --------------------------------------------------------- */
-
-.note-workspace .text-area {
-  width: auto;
-  min-height: 390px;
-  flex: 1;
-
-  margin: 16px;
-  padding: 22px 24px;
-
-  resize: none;
-  outline: none;
-
-  border: 
-    1px solid 
-    var(--border-secondary);
-  border-radius: 7px;
-
-  background: var(--bg-editor);
-  color: var(--text-primary-soft);
-
-  font: inherit;
-  font-size: 16px;
-  line-height: 1.55;
-
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.note-workspace .text-area::placeholder {
-  color: #778399;
-}
-
-.note-workspace .text-area:focus {
-  border-color: var(--accent-focus);
-  box-shadow: 0 0 0 3px rgba(104, 100, 239, 0.09);
-}
 
 /* ---------------------------------------------------------
    Graph panel
    --------------------------------------------------------- */
 
-.note-workspace .graph-placeholder {
-  position: relative;
-  flex: 1;
-  min-height: 420px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-
-  padding: 18px;
-
-  color: #8f9bb0;
-  text-align: center;
-}
-
-.note-workspace .graph-placeholder > p {
-  margin: 10px 0 6px;
-  color: #8f9bb0;
-  font-size: 14px;
-}
 
 .note-workspace .graph-container {
   position: relative;
@@ -703,44 +643,6 @@
   background: var(--bg-workspace-canvas);
 }
 
-.note-workspace .graph-placeholder > button {
-  align-self: flex-end;
-
-  margin-top: 10px;
-  padding: 8px 14px;
-
-  border: 1px solid #514bd0;
-  border-radius: 7px;
-
-  background: var(--accent-primary);
-  color: #ffffff;
-
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-
-  cursor: pointer;
-
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    transform 0.16s ease;
-}
-
-.note-workspace .graph-placeholder > button:hover:not(:disabled) {
-  background: #746ff5;
-  border-color: #746ff5;
-  transform: translateY(-1px);
-}
-
-.note-workspace .graph-placeholder > button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.note-workspace .graph-error {
-  color: #ff8e94;
-}
 
 /* ================================================== */
 /* Summary Panel                                      */
@@ -971,19 +873,6 @@
 }
 
 
-/* Score + AI button */
-
-.note-workspace .summary-heading-actions {
-  min-width: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-
-  gap: 10px;
-
-  margin-left: auto;
-}
 
 
 /* ================================================== */
@@ -1007,43 +896,6 @@
   box-sizing: border-box;
 }
 
-/* ================================================== */
-/* AI Summary                                         */
-/* ================================================== */
-
-.note-workspace .ai-summary-content {
-  height: 180px;
-  min-height: 180px;
-
-  padding: 15px 17px;
-
-  box-sizing: border-box;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  border: 
-    1px solid 
-    var(--border-secondary);
-  border-radius: 6px;
-
-  background: var(--bg-panel-secondary);
-
-  color: var(--text-body);
-
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-
-.note-workspace .ai-summary-content p {
-  margin: 0;
-}
-
-
-.note-workspace .summary-placeholder {
-  color: var(--text-placeholder);
-}
 
 
 /* ================================================== */
@@ -1096,12 +948,6 @@
 /* User Summary Score                                 */
 /* ================================================== */
 
-.note-workspace .summary-user-actions {
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-}
 
 .note-workspace .summary-score {
   height: 30px;
@@ -1244,7 +1090,7 @@
 
   color: var(--status-error);
 
-  font-size: 11px;
+  font-size: 0.74rem;
   font-weight: 400;
 
   text-align: right;
@@ -1258,51 +1104,6 @@
   flex: 0 1 290px;
 }
 
-/* ================================================== */
-/* Summary Scrollbars                                 */
-/* ================================================== */
-
-.note-workspace .ai-summary-content::-webkit-scrollbar,
-.note-workspace .user-summary-input::-webkit-scrollbar {
-  width: 6px;
-}
-
-
-.note-workspace .ai-summary-content::-webkit-scrollbar-track,
-.note-workspace .user-summary-input::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-
-.note-workspace .ai-summary-content::-webkit-scrollbar-thumb,
-.note-workspace .user-summary-input::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-
-  background: var(--scrollbar-thumb);
-}
-
-
-.note-workspace .ai-summary-content::-webkit-scrollbar-thumb:hover,
-.note-workspace .user-summary-input::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
-
-/* ---------------------------------------------------------
-   Scrollbars inside the workspace
-   --------------------------------------------------------- */
-
-.note-workspace textarea::-webkit-scrollbar {
-  width: 7px;
-}
-
-.note-workspace textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.note-workspace textarea::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: var(--scrollbar-thumb);
-}
 
 .note-workspace .summary-view::-webkit-scrollbar {
   width: 7px;
@@ -1372,9 +1173,6 @@
     height: 32px;
   }
 
-  .note-workspace .summary-content {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ---------------------------------------------------------
@@ -2005,62 +1803,6 @@
     var(--text-primary);
 }
 
-.note-workspace
-.text-style-menu-divider {
-  height: 1px;
-  margin: 3px 2px;
-
-  background:
-    var(--border-subtle);
-}
-
-.note-workspace
-.raw-notes-toolbar
-.text-style-menu-action {
-  width: 100%;
-  min-height: 31px;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 9px;
-
-  border:
-    1px solid
-    transparent;
-
-  border-radius: 5px;
-
-  background:
-    transparent;
-
-  color:
-    var(--text-primary);
-
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 500;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-.note-workspace
-.raw-notes-toolbar
-.text-style-menu-action:hover {
-  background:
-    var(--accent-primary);
-
-  color:
-    var(--text-on-accent);
-}
-
-.note-workspace
-.text-style-menu-action-muted {
-  color:
-    var(--text-secondary);
-}
 
 /* Separators between groups */
 
@@ -2112,6 +1854,13 @@
   letter-spacing: var(--note-p-letter-spacing, normal);
 
   white-space: pre-wrap;
+
+scrollbar-width: auto;
+  scrollbar-color: auto;
+
+  scrollbar-color:
+    var(--editor-scrollbar-thumb)
+    transparent;
 }
 
 
@@ -2242,14 +1991,7 @@
 /* Raw Notes Scroll Bar                               */
 /* ================================================== */
 
-.note-workspace .raw-notes-content {
-  scrollbar-width: auto;
-  scrollbar-color: auto;
 
-  scrollbar-color:
-    var(--editor-scrollbar-thumb)
-    transparent;
-}
 
 .note-workspace .raw-notes-content::-webkit-scrollbar {
   width: 8px;
@@ -2309,6 +2051,8 @@
     var(--shadow-popover);
 
   color: var(--text-primary);
+
+  user-select: none;
 }
 
 /* Selected-text preview */
@@ -2407,17 +2151,6 @@
   background: var(--accent-primary-active);
 }
 
-.notes-context-menu {
-  user-select: none;
-}
-
-.notes-context-menu-preview {
-  user-select: none;
-}
-
-.notes-context-menu-item {
-  user-select: none;
-}
 
 /* Link to Node Flyout Menu */
 
@@ -2744,27 +2477,6 @@
   pointer-events: none;
 }
 
-.note-workspace .toolbar-color-indicator-empty {
-  background:
-    repeating-linear-gradient(
-      135deg,
-      #5b6577 0,
-      #5b6577 2px,
-      transparent 2px,
-      transparent 4px
-    );
-}
-
-.note-workspace .toolbar-hidden-color-input {
-  position: absolute;
-
-  width: 1px;
-  height: 1px;
-
-  opacity: 0;
-
-  pointer-events: none;
-}
 
 /* ================================================== */
 /* Graph Linked Text                                  */
@@ -2859,16 +2571,6 @@
 }
 
 
-.notes-context-hidden-color-input {
-  position: absolute;
-
-  width: 1px;
-  height: 1px;
-
-  opacity: 0;
-
-  pointer-events: none;
-}
 
 /* ================================================== */
 /* Paragraph Formatting Popover                       */
@@ -3040,12 +2742,6 @@
   color: var(--text-on-accent);
 }
 
-.note-workspace .alignment-toolbar-button {
-  width: auto;
-
-  padding-left: 7px;
-  padding-right: 5px;
-}
 
 
 .note-workspace .alignment-toolbar-icon {
@@ -3064,17 +2760,20 @@
 }
 
 .note-workspace .graph-panel-header-actions {
-  min-width: 0;
+  position: relative;
 
+  min-width: 0;
   flex: 1;
 
   display: flex;
   align-items: center;
   justify-content: flex-end;
 
-  gap: 12px;
+  gap: 8px;
 
   margin-left: auto;
+
+  overflow: visible;
 }
 
 .note-workspace .graph-header-error {
@@ -3085,7 +2784,7 @@
 
   color: var(--status-error);
 
-  font-size: 11px;
+  font-size: 0.74rem;
   font-weight: 400;
 
   text-align: right;
@@ -3099,6 +2798,9 @@
 /* ================================================== */
 
 .note-workspace .graph-node-toolbar {
+  position: relative;
+  z-index: 100;
+
   width: 100%;
   height: auto;
   min-height: 43px;
@@ -3125,6 +2827,8 @@
 
   color:
     var(--toolbar-button-text);
+
+  overflow: visible;
 }
 
 
@@ -3359,17 +3063,6 @@
 }
 
 
-.note-workspace
-.graph-hidden-color-input {
-  position: absolute;
-
-  width: 1px;
-  height: 1px;
-
-  opacity: 0;
-
-  pointer-events: none;
-}
 
 
 /* ================================================== */
@@ -3597,6 +3290,16 @@
     var(--text-primary);
 
   pointer-events: none;
+
+overflow-y: auto;
+  overflow-x: hidden;
+
+  overscroll-behavior: contain;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    var(--editor-scrollbar-thumb)
+    transparent;
 }
 
 
@@ -3947,18 +3650,6 @@
     var(--text-on-accent);
 }
 
-.note-workspace .graph-selected-node-overlay,
-.note-workspace .graph-link-mode-overlay {
-  background:
-    color-mix(
-      in srgb,
-      var(--bg-panel-elevated) 60%,
-      transparent
-    );
-
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-}
 
 /* ================================================== */
 /* Graph Feedback                                     */
@@ -4057,7 +3748,7 @@ button[data-tooltip],
 button[data-tooltip],
 
 .note-workspace
-.search-submit-button[data-tooltip],
+.graph-semantic-submit[data-tooltip],
 
 .note-workspace
 .panel-focus-button[data-tooltip] {
@@ -4080,7 +3771,7 @@ button[data-tooltip]::after,
 button[data-tooltip]::after,
 
 .note-workspace
-.search-submit-button[data-tooltip]::after,
+.graph-semantic-submit[data-tooltip]::after,
 
 .note-workspace
 .panel-focus-button[data-tooltip]::after {
@@ -4148,7 +3839,7 @@ button[data-tooltip]::before,
 button[data-tooltip]::before,
 
 .note-workspace
-.search-submit-button[data-tooltip]::before,
+.graph-semantic-submit[data-tooltip]::before,
 
 .note-workspace
 .panel-focus-button[data-tooltip]::before {
@@ -4213,10 +3904,10 @@ button[data-tooltip]:hover::after,
 button[data-tooltip]:hover::before,
 
 .note-workspace
-.search-submit-button[data-tooltip]:hover::after,
+.graph-semantic-submit[data-tooltip]:hover::after,
 
 .note-workspace
-.search-submit-button[data-tooltip]:hover::before,
+.graph-semantic-submit[data-tooltip]:hover::before,
 
 .note-workspace
 .panel-focus-button[data-tooltip]:hover::after,
@@ -4249,7 +3940,7 @@ button[data-tooltip]:hover::after,
 button[data-tooltip]:hover::after,
 
 .note-workspace
-.search-submit-button[data-tooltip]:hover::after,
+.graph-semantic-submit[data-tooltip]:hover::after,
 
 .note-workspace
 .panel-focus-button[data-tooltip]:hover::after,
@@ -4266,7 +3957,7 @@ button[data-tooltip]:hover::after,
 /* ================================================== */
 
 .note-workspace
-.search-submit-button[data-tooltip]::after,
+.graph-semantic-submit[data-tooltip]::after,
 
 .note-workspace
 .panel-focus-button[data-tooltip]::after {
@@ -4278,7 +3969,7 @@ button[data-tooltip]:hover::after,
 }
 
 .note-workspace
-.search-submit-button[data-tooltip]::before,
+.graph-semantic-submit[data-tooltip]::before,
 
 .note-workspace
 .panel-focus-button[data-tooltip]::before {
@@ -4290,9 +3981,9 @@ button[data-tooltip]:hover::after,
 }
 
 .note-workspace
-.search-submit-button[data-tooltip]:hover::after,
+.graph-semantic-submit[data-tooltip]:hover::after,
 .note-workspace
-.search-submit-button[data-tooltip]:focus-visible::after {
+.graph-semantic-submit[data-tooltip]:focus-visible::after {
   transform:
     translateY(0);
 }
@@ -4381,15 +4072,14 @@ button[data-tooltip]:hover::after,
 }
 
 
-/* Header action groups may freely display their tooltips */
-.note-workspace .graph-panel-header-actions {
-  position: relative;
-
-  overflow: visible;
-}
-
 .note-workspace .graph-generation-actions {
   position: relative;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
 
   overflow: visible;
 }
@@ -4409,27 +4099,6 @@ button[data-tooltip]:hover::after,
 }
 
 
-/*
-  Toolbar remains above the Cytoscape canvas so its own
-  tooltips and popovers still work correctly.
-*/
-.note-workspace .graph-node-toolbar {
-  position: relative;
-  z-index: 100;
-
-  overflow: visible;
-}
-
-
-/*
-  Cytoscape itself should remain clipped to its viewport.
-*/
-.note-workspace .graph-canvas-shell {
-  position: relative;
-  z-index: 1;
-
-  overflow: hidden;
-}
 
 /* ================================================== */
 /* Editor corner cleanup                              */
@@ -4502,16 +4171,12 @@ button[data-tooltip]:hover::after,
   background: transparent;
 }
 
-/* Raw Notes still needs clipping for its rounded editor */
+/* Raw Notes clips its rounded editor while anchoring local overlays. */
 .note-workspace .raw-notes-editor {
+  position: relative;
   overflow: hidden;
 }
 
-/* Graph toolbar needs to let tooltips/popovers escape */
-.note-workspace .graph-editor {
-  position: relative;
-  overflow: visible;
-}
 
 /* ================================================== */
 /* Active editor focus                                */
@@ -4708,10 +4373,8 @@ button[data-tooltip]:hover::after,
 
 /* =========================================================
    GRAPH FLOATING GLASS PANELS
-   Keep near the END of NoteWorkspace.css
    ========================================================= */
 
-.note-workspace .graph-selected-node-overlay,
 .note-workspace .graph-link-mode-overlay,
 .note-workspace .graph-feedback,
 .note-workspace .graph-semantic-search-toggle,
@@ -4829,34 +4492,11 @@ button[data-tooltip]:hover::after,
     currentColor;
 }
 
-.note-workspace
-.graph-selected-edge-relationship {
-  margin-top:
-    4px;
-
-  color:
-    var(--text-secondary);
-
-  font-size:
-    10px;
-
-  font-weight:
-    500;
-
-  line-height:
-    1.3;
-
-  text-transform:
-    none;
-}
 
 /* ================================================== */
 /* Linked Text Navigator                              */
 /* ================================================== */
 
-.note-workspace .raw-notes-editor {
-  position: relative;
-}
 
 .note-workspace .linked-text-navigator {
   position: absolute;
@@ -5030,38 +4670,10 @@ button:disabled {
 }
 
 /* ================================================== */
-/* Graph Multiselection Panel Overlflow Protection    */
+/* Graph Selection Overlay Overflow Protection        */
 /* ================================================== */
 
-.graph-selected-node-overlay {
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color:
-    var(--editor-scrollbar-thumb)
-    transparent;
-}
 
-.graph-selection-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.graph-selection-group-title {
-  font-size: 10px;
-  font-weight: 600;
-  opacity: 0.65;
-  text-transform: uppercase;
-}
-
-.graph-selection-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
 /* =========================================================
    RESPONSIVE FLOATING OVERLAYS FOR RESIZABLE PANELS
    ========================================================= */
@@ -5116,7 +4728,7 @@ button:disabled {
 
 .note-workspace
 .graph-top-overlay-stack
-.graph-selected-node-overlay {
+.graph-selection-overlay {
   position: relative;
 
   top: auto;
@@ -5129,7 +4741,7 @@ button:disabled {
   min-width: min(125px, 100%);
   max-width: min(190px, 100%);
 
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .note-workspace
@@ -5159,7 +4771,7 @@ button:disabled {
 @container graph-canvas (max-width: 360px) {
   .note-workspace
   .graph-top-overlay-stack
-  .graph-selected-node-overlay,
+  .graph-selection-overlay,
 
   .note-workspace
   .graph-top-overlay-stack
@@ -5176,7 +4788,7 @@ button:disabled {
 
   .note-workspace
   .graph-top-overlay-stack
-  .graph-selected-node-overlay {
+  .graph-selection-overlay {
     max-height: 120px;
   }
 }
@@ -5759,895 +5371,12 @@ span {
   background: var(--accent-primary);
   opacity: 0.92;
 
-  animation:
-    transcriptionWavePulse
-    0.8s ease-in-out
-    infinite alternate;
-}
-
-.note-workspace
-.transcription-waveform-active
-span:nth-child(2n) {
-  animation-delay: -0.22s;
-}
-
-.note-workspace
-.transcription-waveform-active
-span:nth-child(3n) {
-  animation-delay: -0.46s;
-}
-
-.note-workspace
-.transcription-waveform-active
-span:nth-child(4n) {
-  animation-delay: -0.62s;
-}
-
-@keyframes transcriptionWavePulse {
-  0% {
-    height: 10px;
-  }
-
-  100% {
-    height: 42px;
-  }
-}
-
-.note-workspace .transcription-prototype-note {
-  margin: -4px 0 0;
-
-  color: var(--text-muted);
-
-  font-size: 0.72rem;
-  line-height: 1.45;
-
-  text-align: center;
-}
-
-/* ---------------------------------------------------------
-   Transcript editor
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  color: var(--text-primary);
-
-  font-size: 0.84rem;
-  font-weight: 650;
-}
-
-.note-workspace .transcription-field textarea {
-  width: 100%;
-  min-height: 170px;
-
-  box-sizing: border-box;
-
-  padding: 13px 14px;
-
-  resize: vertical;
-
-  border: 1px solid var(--border-control);
-  border-radius: 9px;
-
-  outline: none;
-
-  background: var(--bg-input);
-  color: var(--text-primary);
-
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 400;
-  line-height: 1.55;
-
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
-}
-
-.note-workspace .transcription-field textarea::placeholder,
-.note-workspace .transcription-term-entry input::placeholder {
-  color: var(--text-muted);
-}
-
-.note-workspace .transcription-field textarea:focus,
-.note-workspace .transcription-term-entry input:focus {
-  background: var(--bg-input-focus);
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px var(--focus-ring-soft);
-}
-
-/* ---------------------------------------------------------
-   Terminology
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-terms-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  padding-top: 2px;
-}
-
-.note-workspace .transcription-terms-copy strong,
-.note-workspace .transcription-terms-copy span {
-  display: block;
-}
-
-.note-workspace .transcription-terms-copy strong {
-  color: var(--text-primary);
-
-  font-size: 0.84rem;
-  font-weight: 650;
-}
-
-.note-workspace .transcription-terms-copy span {
-  margin-top: 4px;
-
-  color: var(--text-muted);
-
-  font-size: 0.72rem;
-  line-height: 1.4;
-}
-
-.note-workspace .transcription-term-entry {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 9px;
-}
-
-.note-workspace .transcription-term-entry input {
-  min-width: 0;
-  height: 38px;
-
-  box-sizing: border-box;
-
-  padding: 0 12px;
-
-  border: 1px solid var(--border-control);
-  border-radius: 8px;
-
-  outline: none;
-
-  background: var(--bg-input);
-  color: var(--text-primary);
-
-  font: inherit;
-  font-size: 0.78rem;
-}
-
-.note-workspace .transcription-term-add {
-  height: 38px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-
-  padding: 0 13px;
-
-  border: 1px solid var(--border-control);
-  border-radius: 8px;
-
-  background: var(--bg-control);
-  color: var(--text-primary);
-
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 650;
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.note-workspace .transcription-term-add:hover:not(:disabled) {
-  border-color: var(--accent-primary);
-  background: var(--bg-hover);
-  color: var(--accent-primary);
-}
-
-.note-workspace .transcription-term-add:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.note-workspace .transcription-term-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.note-workspace .transcription-term-chip {
-  min-height: 28px;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-
-  padding: 0 5px 0 9px;
-
-  border: 1px solid var(--border-accent);
-  border-radius: 999px;
-
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 8%,
-      transparent
-    );
-
-  color: var(--text-primary);
-
-  font-size: 0.72rem;
-}
-
-.note-workspace .transcription-term-chip button {
-  width: 22px;
-  height: 22px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: 0;
-  border-radius: 50%;
-
-  background: transparent;
-  color: var(--text-muted);
-
-  cursor: pointer;
-}
-
-.note-workspace .transcription-term-chip button:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-/* ---------------------------------------------------------
-   Footer actions
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-
-  padding: 16px 24px;
-
-  border-top: 1px solid var(--border-subtle);
-
-  background:
-    color-mix(
-      in srgb,
-      var(--bg-panel-secondary) 82%,
-      transparent
-    );
-}
-
-.note-workspace .transcription-modal-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 9px;
-}
-
-.note-workspace .transcription-footer-button {
-  min-height: 38px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  padding: 0 14px;
-
-  border: 1px solid var(--border-control);
-  border-radius: 8px;
-
-  background: var(--bg-control);
-  color: var(--text-primary);
-
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 650;
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.12s ease;
-}
-
-.note-workspace
-.transcription-footer-button:hover:not(:disabled) {
-  border-color: var(--accent-primary);
-  background: var(--bg-hover);
-}
-
-.note-workspace .transcription-footer-button:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.note-workspace .transcription-footer-button:focus-visible {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--focus-ring-soft);
-}
-
-.note-workspace .transcription-footer-button:disabled {
-  opacity: 0.42;
-  cursor: not-allowed;
-}
-
-.note-workspace .transcription-clear-button {
-  color: var(--text-secondary);
-}
-
-.note-workspace .transcription-listen-button-active {
-  border-color:
-    color-mix(
-      in srgb,
-      var(--status-error) 65%,
-      var(--border-control)
-    );
-
-  background:
-    color-mix(
-      in srgb,
-      var(--status-error) 10%,
-      transparent
-    );
-
-  color: var(--status-error);
-}
-
-.note-workspace .transcription-append-button {
-  border-color: var(--accent-primary);
-  background: var(--accent-primary);
-  color: var(--text-on-accent);
-}
-
-.note-workspace
-.transcription-append-button:hover:not(:disabled) {
-  background: var(--accent-primary-hover);
-  color: var(--text-on-accent);
-}
-
-/* ---------------------------------------------------------
-   Scrollbars
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-modal-body::-webkit-scrollbar,
-.note-workspace .transcription-field textarea::-webkit-scrollbar {
-  width: 7px;
-}
-
-.note-workspace .transcription-modal-body::-webkit-scrollbar-track,
-.note-workspace .transcription-field textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.note-workspace .transcription-modal-body::-webkit-scrollbar-thumb,
-.note-workspace .transcription-field textarea::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: var(--scrollbar-thumb);
-}
-
-/* ---------------------------------------------------------
-   Responsive modal
-   --------------------------------------------------------- */
-
-@media (max-width: 680px) {
-  .note-workspace .transcription-modal-backdrop {
-    padding: 14px;
-  }
-
-  .note-workspace .transcription-modal {
-    width: min(100%, calc(100vw - 28px));
-    max-height: calc(100vh - 28px);
-  }
-
-  .note-workspace .transcription-modal-header,
-  .note-workspace .transcription-modal-body,
-  .note-workspace .transcription-modal-footer {
-    padding-left: 18px;
-    padding-right: 18px;
-  }
-
-  .note-workspace .transcription-status-row,
-  .note-workspace .transcription-modal-footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .note-workspace .transcription-modal-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .note-workspace .transcription-footer-button,
-  .note-workspace .transcription-modal-actions .transcription-footer-button {
-    width: 100%;
-  }
-
-  .note-workspace .transcription-term-entry {
-    grid-template-columns: 1fr;
-  }
-
-  .note-workspace .transcription-term-add {
-    width: 100%;
-  }
-}
-
-/* The waveform now follows the real microphone level. Inline heights are supplied by React. */
-.note-workspace
-.transcription-waveform-active
-span {
-  animation: none;
-
   transition:
     height 70ms linear,
     background 0.16s ease,
     opacity 0.16s ease;
 }
 
-/* Permission is pending. */
-.note-workspace
-.transcription-status-requesting {
-  border-color: var(--border-accent);
-  color: var(--text-primary);
-}
-
-.note-workspace
-.transcription-status-requesting
-.transcription-status-dot {
-  background: var(--accent-primary);
-
-  animation:
-    transcriptionPermissionPulse
-    0.9s ease-in-out
-    infinite alternate;
-}
-
-/* A completed capture keeps a quieter positive status. */
-.note-workspace
-.transcription-status-captured {
-  border-color:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 55%,
-      var(--border-control)
-    );
-
-  color: var(--text-primary);
-}
-
-.note-workspace
-.transcription-status-captured
-.transcription-status-dot {
-  background: var(--accent-primary);
-}
-
-/* Microphone permission/device failures. */
-.note-workspace
-.transcription-status-error {
-  border-color:
-    color-mix(
-      in srgb,
-      var(--status-error) 55%,
-      var(--border-control)
-    );
-
-  color: var(--status-error);
-}
-
-.note-workspace
-.transcription-status-error
-.transcription-status-dot {
-  background: var(--status-error);
-}
-
-.note-workspace
-.transcription-microphone-error {
-  color: var(--status-error);
-}
-
-/* Make it visually obvious that Start is waiting on the browser's
-   permission prompt and cannot be clicked repeatedly. */
-.note-workspace
-.transcription-listen-button:disabled {
-  opacity: 0.68;
-  cursor: wait;
-}
-
-@keyframes transcriptionPermissionPulse {
-  from {
-    opacity: 0.45;
-    transform: scale(0.82);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1.12);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .note-workspace
-  .transcription-status-requesting
-  .transcription-status-dot {
-    animation: none;
-  }
-
-  .note-workspace
-  .transcription-waveform-active
-  span {
-    transition: none;
-  }
-}
-
-/* Raw Notes now has two compact workspace controls: microphone
-   transcription and panel focus. */
-.note-workspace .raw-notes-heading-actions {
-  margin-left: auto;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  flex: 0 0 auto;
-}
-
-.note-workspace
-.raw-notes-heading-actions
-.panel-focus-button {
-  margin-left: 0;
-}
-
-.note-workspace
-.transcription-launch-button[aria-pressed="true"] {
-  border-color: var(--accent-primary);
-  background: var(--accent-primary);
-  color: var(--text-on-accent);
-}
-
-/* ---------------------------------------------------------
-   Modal backdrop
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-modal-backdrop {
-  position: fixed;
-  inset: 0;
-
-  z-index: 7000;
-
-  display: grid;
-  place-items: center;
-
-  padding: 28px;
-
-  background: rgba(3, 8, 20, 0.76);
-
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.note-workspace .transcription-modal {
-  width: min(780px, calc(100vw - 56px));
-  max-height: calc(100vh - 56px);
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
-  border: 1px solid var(--border-primary);
-  border-radius: 16px;
-
-  background: var(--bg-panel);
-  color: var(--text-primary);
-
-  box-shadow: var(--shadow-card);
-}
-
-/* ---------------------------------------------------------
-   Header
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 22px;
-
-  padding: 22px 24px 19px;
-
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.note-workspace .transcription-modal-heading {
-  min-width: 0;
-
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-}
-
-.note-workspace .transcription-modal-icon {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid var(--border-accent);
-  border-radius: 10px;
-
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 10%,
-      transparent
-    );
-
-  color: var(--accent-primary);
-
-  transition:
-    background 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
-}
-
-.note-workspace .transcription-modal-icon-listening {
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 20%,
-      transparent
-    );
-
-  box-shadow:
-    0 0 0 4px
-    color-mix(
-      in srgb,
-      var(--accent-primary) 9%,
-      transparent
-    );
-}
-
-.note-workspace .transcription-modal-heading h2 {
-  margin: 1px 0 0;
-
-  color: var(--text-primary);
-
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.note-workspace .transcription-modal-heading p {
-  margin: 6px 0 0;
-
-  color: var(--text-secondary);
-
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-.note-workspace .transcription-modal-close {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: 1px solid var(--border-control);
-  border-radius: 8px;
-
-  background: transparent;
-  color: var(--text-secondary);
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.note-workspace .transcription-modal-close:hover {
-  border-color: var(--accent-primary);
-
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 10%,
-      transparent
-    );
-
-  color: var(--accent-primary);
-}
-
-.note-workspace .transcription-modal-close:focus-visible {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--focus-ring-soft);
-}
-
-/* ---------------------------------------------------------
-   Body
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-modal-body {
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  padding: 20px 24px 22px;
-
-  overflow-y: auto;
-}
-
-.note-workspace .transcription-status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.note-workspace .transcription-language-badge,
-.note-workspace .transcription-status {
-  min-height: 32px;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-
-  padding: 0 10px;
-
-  border: 1px solid var(--border-control);
-  border-radius: 999px;
-
-  background: var(--bg-panel-secondary);
-  color: var(--text-secondary);
-
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.note-workspace .transcription-language-badge svg {
-  color: var(--text-muted);
-}
-
-.note-workspace .transcription-status-dot {
-  width: 7px;
-  height: 7px;
-
-  border-radius: 50%;
-
-  background: var(--text-muted);
-
-  transition:
-    background 0.16s ease,
-    box-shadow 0.16s ease;
-}
-
-.note-workspace
-.transcription-status-listening
-.transcription-status-dot {
-  background: var(--accent-primary);
-
-  box-shadow:
-    0 0 0 4px
-    color-mix(
-      in srgb,
-      var(--accent-primary) 12%,
-      transparent
-    );
-}
-
-.note-workspace .transcription-status-listening {
-  border-color: var(--border-accent);
-  color: var(--text-primary);
-}
-
-/* ---------------------------------------------------------
-   Listening visualisation
-   --------------------------------------------------------- */
-
-.note-workspace .transcription-waveform {
-  height: 70px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-
-  padding: 0 20px;
-
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-
-  background:
-    color-mix(
-      in srgb,
-      var(--bg-workspace-canvas) 88%,
-      transparent
-    );
-}
-
-.note-workspace .transcription-waveform span {
-  width: 4px;
-  height: 12px;
-
-  border-radius: 999px;
-
-  background: var(--text-muted);
-
-  opacity: 0.55;
-
-  transform-origin: center;
-}
-
-.note-workspace
-.transcription-waveform-active
-span {
-  background: var(--accent-primary);
-  opacity: 0.92;
-
-  animation:
-    transcriptionWavePulse
-    0.8s ease-in-out
-    infinite alternate;
-}
-
-.note-workspace
-.transcription-waveform-active
-span:nth-child(2n) {
-  animation-delay: -0.22s;
-}
-
-.note-workspace
-.transcription-waveform-active
-span:nth-child(3n) {
-  animation-delay: -0.46s;
-}
-
-.note-workspace
-.transcription-waveform-active
-span:nth-child(4n) {
-  animation-delay: -0.62s;
-}
-
-@keyframes transcriptionWavePulse {
-  0% {
-    height: 10px;
-  }
-
-  100% {
-    height: 42px;
-  }
-}
 
 .note-workspace .transcription-prototype-note {
   margin: -4px 0 0;
@@ -7049,23 +5778,6 @@ span:nth-child(4n) {
 
 
 
-/* =========================================================
-   STAGE 4.1 - REAL MICROPHONE CAPTURE
-   Append after the Stage 4.0 transcription styles.
-   ========================================================= */
-
-/* The waveform now follows the real microphone level instead of the
-   Stage 4.0 placeholder animation. Inline heights are supplied by React. */
-.note-workspace
-.transcription-waveform-active
-span {
-  animation: none;
-
-  transition:
-    height 70ms linear,
-    background 0.16s ease,
-    opacity 0.16s ease;
-}
 
 /* Permission is pending. */
 .note-workspace
@@ -7163,7 +5875,7 @@ span {
 }
 
 /* =========================================================
-   STAGE 4.2 - LIVE ASR WEBSOCKET
+   LIVE ASR WEBSOCKET STATES
    ========================================================= */
 
 .note-workspace
@@ -7218,10 +5930,11 @@ span {
 }
 
 /* =========================================================
-   GRAPH NODE IMAGE MODAL
+   GRAPH MODALS
+   Node Image / Node Properties / Edge Properties
    ========================================================= */
 
-.graph-image-modal-backdrop {
+.note-workspace .graph-image-modal-backdrop {
   position: absolute;
   inset: 0;
   z-index: 60;
@@ -7232,82 +5945,69 @@ span {
 
   padding: 18px;
 
-  background: rgba(4, 10, 22, 0.72);
+  background: rgb(2 6 23 / 0.68);
   backdrop-filter: blur(2px);
 }
 
 
 /* =========================================================
-   MODAL SHELL
+   Modal shell
    ========================================================= */
 
-.graph-image-modal {
+.note-workspace .graph-image-modal {
   width: min(430px, calc(100% - 20px));
   max-height: calc(100% - 24px);
 
   overflow-y: auto;
   overflow-x: hidden;
 
-  border: 1px solid rgba(119, 114, 255, 0.7);
+  border:
+    1px solid
+    var(--border-primary);
   border-radius: 12px;
 
-  background: #111c2f;
-  color: #eef1f7;
+  background: var(--bg-panel-elevated);
+  color: var(--text-primary);
 
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-overlay);
 
-  /*
-    Firefox scrollbar.
-  */
   scrollbar-width: thin;
   scrollbar-color:
     var(--editor-scrollbar-thumb)
     transparent;
 }
 
-
-/* =========================================================
-   CHROMIUM / EDGE / SAFARI SCROLLBAR
-   ========================================================= */
-
-.graph-image-modal::-webkit-scrollbar {
+.note-workspace .graph-image-modal::-webkit-scrollbar {
   width: 8px;
 }
 
-.graph-image-modal::-webkit-scrollbar-track {
+.note-workspace .graph-image-modal::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.graph-image-modal::-webkit-scrollbar-thumb {
-  background:
-    rgba(119, 114, 255, 0.46);
-
+.note-workspace .graph-image-modal::-webkit-scrollbar-thumb {
+  background: rgba(119, 114, 255, 0.46);
   border: 2px solid transparent;
   border-radius: 999px;
-
   background-clip: padding-box;
 }
 
-.graph-image-modal::-webkit-scrollbar-thumb:hover {
-  background:
-    rgba(119, 114, 255, 0.72);
-
+.note-workspace .graph-image-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(119, 114, 255, 0.72);
   border: 2px solid transparent;
-
   background-clip: padding-box;
 }
 
-.graph-image-modal::-webkit-scrollbar-corner {
+.note-workspace .graph-image-modal::-webkit-scrollbar-corner {
   background: transparent;
 }
 
 
 /* =========================================================
-   HEADER
+   Header
    ========================================================= */
 
-.graph-image-modal-header {
+.note-workspace .graph-image-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7316,113 +6016,173 @@ span {
 
   padding: 14px 16px;
 
+  background: var(--bg-panel-elevated);
+
   border-bottom:
-    1px solid rgba(148, 163, 184, 0.18);
+    1px solid
+    var(--border-primary);
 }
 
-.graph-image-modal-title {
+.note-workspace .graph-image-modal-title {
+  min-width: 0;
+
   display: flex;
   align-items: center;
 
   gap: 9px;
-  min-width: 0;
+
+  color: var(--text-primary);
 
   font-size: 14px;
   font-weight: 700;
 }
 
-.graph-image-modal-close {
-  display: grid;
-  place-items: center;
+.note-workspace .graph-image-modal-title svg {
+  color: var(--text-primary);
+}
 
+.note-workspace .graph-image-modal-close {
   width: 30px;
   height: 30px;
 
-  border: 1px solid transparent;
+  display: grid;
+  place-items: center;
+
+  border:
+    1px solid
+    transparent;
   border-radius: 7px;
 
   background: transparent;
-  color: #aab6ca;
+  color: var(--text-muted);
 
   cursor: pointer;
 }
 
-.graph-image-modal-close:hover {
-  border-color:
-    rgba(148, 163, 184, 0.24);
-
-  background:
-    rgba(148, 163, 184, 0.08);
-
-  color: #ffffff;
+.note-workspace .graph-image-modal-close:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 
 /* =========================================================
-   MODAL BODY
+   Modal body
    ========================================================= */
 
-.graph-image-modal-body {
+.note-workspace .graph-image-modal-body {
   display: grid;
 
   gap: 16px;
 
   padding: 16px;
+
+  background: var(--bg-panel-elevated);
+  color: var(--text-primary);
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(
+      in srgb,
+      var(--accent-primary) 65%,
+      transparent
+    )
+    transparent;
+}
+
+.note-workspace .graph-image-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.note-workspace .graph-image-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.note-workspace .graph-image-modal-body::-webkit-scrollbar-thumb {
+  background:
+    color-mix(
+      in srgb,
+      var(--accent-primary) 62%,
+      transparent
+    );
+
+  border:
+    2px solid
+    transparent;
+
+  border-radius: 999px;
+
+  background-clip: padding-box;
 }
 
 
 /* =========================================================
-   IMAGE PREVIEW
+   Image preview
    ========================================================= */
 
-.graph-image-preview-shell {
+.note-workspace .graph-image-preview-shell {
+  min-height: 220px;
+
   display: grid;
   place-items: center;
 
-  min-height: 220px;
-
   padding: 16px;
 
-  border:
-    1px solid rgba(148, 163, 184, 0.18);
+  overflow: visible;
 
+  border:
+    1px solid
+    var(--border-primary);
   border-radius: 10px;
 
-  background:
+  background-color: var(--bg-input);
+  background-image:
     linear-gradient(
       45deg,
-      rgba(148, 163, 184, 0.055) 25%,
+      color-mix(
+        in srgb,
+        var(--text-primary) 5%,
+        transparent
+      ) 25%,
       transparent 25%
     ),
     linear-gradient(
       -45deg,
-      rgba(148, 163, 184, 0.055) 25%,
+      color-mix(
+        in srgb,
+        var(--text-primary) 5%,
+        transparent
+      ) 25%,
       transparent 25%
     ),
     linear-gradient(
       45deg,
       transparent 75%,
-      rgba(148, 163, 184, 0.055) 75%
+      color-mix(
+        in srgb,
+        var(--text-primary) 5%,
+        transparent
+      ) 75%
     ),
     linear-gradient(
       -45deg,
       transparent 75%,
-      rgba(148, 163, 184, 0.055) 75%
+      color-mix(
+        in srgb,
+        var(--text-primary) 5%,
+        transparent
+      ) 75%
     );
 
-  background-size:
-    20px 20px;
-
+  background-size: 20px 20px;
   background-position:
     0 0,
     0 10px,
     10px -10px,
     -10px 0;
-
-  overflow: visible;
 }
 
-.graph-image-preview-node {
+.note-workspace .graph-image-preview-node {
   position: relative;
 
   display: block;
@@ -7433,10 +6193,6 @@ span {
 
   background: #ffffff;
 
-  /*
-    Stops touch/pointer gestures from trying
-    to pan the page while repositioning.
-  */
   touch-action: none;
 
   transition:
@@ -7444,18 +6200,15 @@ span {
     height 160ms ease;
 }
 
-
-.graph-image-preview-node-draggable {
+.note-workspace .graph-image-preview-node-draggable {
   cursor: grab;
 }
 
-
-.graph-image-preview-node-dragging {
+.note-workspace .graph-image-preview-node-dragging {
   cursor: grabbing;
 }
 
-
-.graph-image-preview {
+.note-workspace .graph-image-preview {
   display: block;
 
   width: 100%;
@@ -7467,22 +6220,22 @@ span {
   background: #ffffff;
 }
 
-.graph-image-preview-empty {
+.note-workspace .graph-image-preview-empty {
   display: grid;
   justify-items: center;
 
   gap: 9px;
 
-  color: #93a3ba;
+  color: var(--text-muted);
 
   font-size: 12px;
   text-align: center;
 }
 
-.graph-image-modal-meta {
+.note-workspace .graph-image-modal-meta {
   margin-top: -7px;
 
-  color: #8fa0b8;
+  color: var(--text-secondary);
 
   font-size: 11px;
   text-align: center;
@@ -7490,63 +6243,73 @@ span {
 
 
 /* =========================================================
-   SETTING GROUP
+   Setting groups
    ========================================================= */
 
-.graph-image-control {
+.note-workspace .graph-image-control {
   display: grid;
 
   gap: 8px;
 }
 
-.graph-image-control-heading {
+.note-workspace .graph-image-control-heading {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
 
   gap: 10px;
 
-  color: #dbe3ef;
+  color: var(--text-primary);
 
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
+}
+
+.note-workspace
+.graph-image-control-heading
+> span:first-child {
+  color: var(--text-primary);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.note-workspace
+.graph-image-control-heading
+> span + span {
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 
 /* =========================================================
-   SEGMENTED CONTROLS
-   Fill / Fit
-   Small / Medium / Large
+   Segmented controls
    ========================================================= */
 
-.graph-image-segmented {
+.note-workspace .graph-image-segmented {
   display: grid;
 
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
 
   gap: 6px;
+
+  border-color: var(--border-control);
+  background: var(--bg-input);
 }
 
-.graph-image-segmented button {
+.note-workspace .graph-image-segmented > button {
   min-height: 34px;
 
   padding: 0 10px;
 
   border:
-    1px solid rgba(148, 163, 184, 0.25);
-
+    1px solid
+    var(--border-control);
   border-radius: 7px;
 
-  background:
-    rgba(15, 27, 46, 0.86);
+  background: transparent;
+  color: var(--text-secondary);
 
-  color: #cbd5e1;
-
-  /*
-    Explicitly set these rather than inheriting
-    the larger application button font.
-  */
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -7555,33 +6318,39 @@ span {
   cursor: pointer;
 }
 
-.graph-image-segmented button:hover {
-  border-color:
-    rgba(119, 114, 255, 0.72);
-
-  color: #ffffff;
+.note-workspace .graph-image-segmented > button:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
-.graph-image-segmented button.active {
-  border-color: #7772ff;
+.note-workspace .graph-image-segmented > button.active {
+  border-color: var(--accent-primary);
 
   background:
-    rgba(119, 114, 255, 0.18);
+    color-mix(
+      in srgb,
+      var(--accent-primary) 18%,
+      var(--bg-input)
+    );
 
-  color: #ffffff;
+  color: var(--text-primary);
 
   box-shadow:
     inset 0 0 0 1px
-      rgba(119, 114, 255, 0.16);
+    color-mix(
+      in srgb,
+      var(--accent-primary) 30%,
+      transparent
+    );
 }
 
 
 /* =========================================================
-   IMAGE ACTION BUTTONS
-   Choose / Replace / Remove
+   Image action buttons
    ========================================================= */
 
-.graph-image-modal-actions {
+.note-workspace .graph-image-modal-actions {
   display: grid;
 
   grid-template-columns: 1fr auto;
@@ -7589,26 +6358,24 @@ span {
   gap: 8px;
 }
 
-.graph-image-modal-action {
+.note-workspace .graph-image-modal-action {
+  min-height: 34px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
   gap: 7px;
 
-  min-height: 34px;
-
   padding: 0 13px;
 
   border:
-    1px solid rgba(148, 163, 184, 0.25);
-
+    1px solid
+    var(--border-control);
   border-radius: 7px;
 
-  background:
-    rgba(15, 27, 46, 0.86);
-
-  color: #cbd5e1;
+  background: var(--bg-input);
+  color: var(--text-primary);
 
   font-family: inherit;
   font-size: 11px;
@@ -7618,89 +6385,99 @@ span {
   cursor: pointer;
 }
 
-.graph-image-modal-action:hover {
+.note-workspace .graph-image-modal-action:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+}
+
+.note-workspace .graph-image-modal-action.primary {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+.note-workspace .graph-image-modal-action.primary:hover {
   border-color:
-    rgba(119, 114, 255, 0.72);
-
-  color: #ffffff;
-}
-
-.graph-image-modal-action.primary {
-  border-color: #7772ff;
-
-  background: #625df0;
-
-  color: #ffffff;
-}
-
-.graph-image-modal-action.primary:hover {
-  background: #6c67f5;
-}
-
-.graph-image-modal-action.danger {
-  border-color:
-    rgba(239, 116, 116, 0.5);
+    color-mix(
+      in srgb,
+      var(--accent-primary) 88%,
+      white
+    );
 
   background:
-    rgba(239, 116, 116, 0.08);
-
-  color: #ff9b9b;
+    color-mix(
+      in srgb,
+      var(--accent-primary) 88%,
+      white
+    );
 }
 
-.graph-image-modal-action.danger:hover {
-  border-color:
-    rgba(239, 116, 116, 0.78);
+.note-workspace .graph-image-modal-action.danger {
+  border-color: rgb(239 68 68 / 0.55);
+  background: rgb(239 68 68 / 0.08);
+  color: #ef4444;
+}
 
-  background:
-    rgba(239, 116, 116, 0.13);
+.note-workspace .graph-image-modal-action.danger:hover {
+  border-color: #ef4444;
+  background: rgb(239 68 68 / 0.16);
+  color: #ef4444;
 }
 
 
 /* =========================================================
-   SHOW NODE NAME
+   Image node toggle
    ========================================================= */
 
-.graph-image-toggle-row {
+.note-workspace .graph-image-toggle-row {
+  min-height: 38px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   gap: 16px;
 
-  min-height: 38px;
-
   padding: 0 10px;
 
   border:
-    1px solid rgba(148, 163, 184, 0.18);
-
+    1px solid
+    var(--border-control);
   border-radius: 7px;
 
-  color: #cbd5e1;
+  background: var(--bg-input);
+  color: var(--text-primary);
 
   font-size: 12px;
 
   cursor: pointer;
 }
 
-.graph-image-toggle-row input {
+.note-workspace .graph-image-toggle-row:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+}
+
+.note-workspace
+.graph-image-toggle-row
+input[type="checkbox"] {
   width: 16px;
   height: 16px;
 
   margin: 0;
 
-  accent-color: #7772ff;
+  accent-color: var(--accent-primary);
 
   cursor: pointer;
 }
 
 
 /* =========================================================
-   HELP / HINT TEXT
+   Help text
    ========================================================= */
 
-.graph-image-modal-hint {
-  color: #8495ae;
+.note-workspace .graph-image-modal-hint {
+  color: var(--text-muted);
 
   font-size: 11px;
   line-height: 1.45;
@@ -7872,10 +6649,6 @@ span {
   font-weight: 600;
 }
 
-.note-workspace .graph-property-modal .graph-image-control-heading > span:last-child {
-  color: var(--text-secondary);
-  font-weight: 600;
-}
 
 .note-workspace .graph-property-text-control,
 .note-workspace .graph-property-dropdown-control,
@@ -7913,6 +6686,7 @@ span {
 }
 
 .note-workspace .graph-property-input:focus {
+  background: var(--bg-input);
   border-color: var(--border-focus);
   box-shadow:
     0 0 0 2px
@@ -8051,7 +6825,7 @@ span {
   background:
     color-mix(
       in srgb,
-      var(--bg-panel-elevated) 92%,
+      var(--bg-panel-elevated) 96%,
       transparent
     );
   backdrop-filter: blur(6px);
@@ -8114,7 +6888,7 @@ span {
   background:
     color-mix(
       in srgb,
-      var(--accent-primary) 8%,
+      var(--accent-primary) 10%,
       transparent
     );
   color: var(--text-primary);
@@ -8224,751 +6998,9 @@ span {
 }
 
 /* =========================================================
-   GRAPH MODALS - SHARED THEME SUPPORT
-   Node Image / Node Properties / Edge Properties
+   GRAPH HEADER STATUS
    ========================================================= */
 
-/* ---------------------------------------------------------
-   MODAL SURFACE
-   --------------------------------------------------------- */
-
-.note-workspace .graph-image-modal {
-  background:
-    var(--bg-panel-elevated);
-
-  color:
-    var(--text-primary);
-
-  border:
-    1px solid
-    var(--border-primary);
-
-  box-shadow:
-    var(--shadow-overlay);
-}
-
-
-/*
-  Keep the page dimming consistent in both themes.
-
-  We intentionally keep this dark/translucent even in
-  light mode because it separates the modal clearly from
-  the graph behind it.
-*/
-.note-workspace .graph-image-modal-backdrop {
-  background:
-    rgb(2 6 23 / 0.68);
-}
-
-
-/* ---------------------------------------------------------
-   HEADER
-   --------------------------------------------------------- */
-
-.note-workspace .graph-image-modal-header {
-  background:
-    var(--bg-panel-elevated);
-
-  border-bottom:
-    1px solid
-    var(--border-primary);
-}
-
-
-.note-workspace .graph-image-modal-title {
-  color:
-    var(--text-primary);
-}
-
-
-.note-workspace .graph-image-modal-title svg {
-  color:
-    var(--text-primary);
-}
-
-
-.note-workspace .graph-image-modal-close {
-  color:
-    var(--text-muted);
-
-  background:
-    transparent;
-
-  border-color:
-    transparent;
-}
-
-
-.note-workspace .graph-image-modal-close:hover {
-  color:
-    var(--text-primary);
-
-  background:
-    var(--bg-hover);
-
-  border-color:
-    var(--border-hover);
-}
-
-
-/* ---------------------------------------------------------
-   MODAL BODY
-   --------------------------------------------------------- */
-
-.note-workspace .graph-image-modal-body {
-  background:
-    var(--bg-panel-elevated);
-
-  color:
-    var(--text-primary);
-}
-
-
-/* ---------------------------------------------------------
-   IMAGE PREVIEW AREA
-   Theme-aware checkerboard rather than a permanently
-   dark preview background.
-   --------------------------------------------------------- */
-
-.note-workspace .graph-image-preview-shell {
-  border:
-    1px solid
-    var(--border-primary);
-
-  background-color:
-    var(--bg-input);
-
-  background-image:
-    linear-gradient(
-      45deg,
-      color-mix(
-        in srgb,
-        var(--text-primary) 5%,
-        transparent
-      ) 25%,
-      transparent 25%
-    ),
-
-    linear-gradient(
-      -45deg,
-      color-mix(
-        in srgb,
-        var(--text-primary) 5%,
-        transparent
-      ) 25%,
-      transparent 25%
-    ),
-
-    linear-gradient(
-      45deg,
-      transparent 75%,
-      color-mix(
-        in srgb,
-        var(--text-primary) 5%,
-        transparent
-      ) 75%
-    ),
-
-    linear-gradient(
-      -45deg,
-      transparent 75%,
-      color-mix(
-        in srgb,
-        var(--text-primary) 5%,
-        transparent
-      ) 75%
-    );
-
-  background-size:
-    20px 20px;
-
-  background-position:
-    0 0,
-    0 10px,
-    10px -10px,
-    -10px 0;
-}
-
-
-.note-workspace .graph-image-preview-empty {
-  color:
-    var(--text-muted);
-}
-
-
-/* ---------------------------------------------------------
-   IMAGE META / HELP TEXT
-   --------------------------------------------------------- */
-
-.note-workspace .graph-image-modal-meta {
-  color:
-    var(--text-secondary);
-}
-
-
-.note-workspace .graph-image-modal-hint {
-  color:
-    var(--text-muted);
-}
-
-
-/* =========================================================
-   IMAGE CONTROL HEADINGS
-
-   The value on the right now uses the same muted treatment
-   as Node Type / Classification / Edge Role.
-   ========================================================= */
-
-.note-workspace .graph-image-control-heading {
-  color:
-    var(--text-primary);
-}
-
-
-/* =========================================================
-   GRAPH MODAL CONTROL HEADINGS
-   ========================================================= */
-
-/*
-  Every property heading uses the same strong treatment.
-
-  Examples:
-    Node type
-    Parent / owner node
-    Relationship
-    Qualifier
-    Adjuncts
-    Classification
-    Edge role
-    Conditional scope
-    Image fit
-    Node size
-*/
-.note-workspace
-.graph-image-control-heading
-> span:first-child {
-  color:
-    var(--text-primary);
-
-  font-weight:
-    600;
-}
-
-/*
-  Only mute a SECOND span when one actually exists.
-
-  This is the right-side current-value text:
-
-    Node type             Conditional
-    Classification       Normal
-    Edge role             Auto-detect → Standard
-    Image fit             Fill
-    Node size             Large
-
-  Using span + span instead of :last-child is important,
-  because a heading with only one span would otherwise
-  incorrectly be treated as a status value.
-*/
-.note-workspace
-.graph-image-control-heading
-> span + span {
-  color:
-    var(--text-muted);
-
-  font-weight:
-    500;
-}
-
-/* =========================================================
-   SEGMENTED CONTROLS
-   Image Fit / Node Size / Node Type /
-   Classification / Edge Role
-   ========================================================= */
-
-.note-workspace .graph-image-segmented {
-  border-color:
-    var(--border-control);
-
-  background:
-    var(--bg-input);
-}
-
-
-.note-workspace .graph-image-segmented > button {
-  background:
-    transparent;
-
-  color:
-    var(--text-secondary);
-
-  border-color:
-    var(--border-control);
-}
-
-
-.note-workspace .graph-image-segmented > button:hover {
-  background:
-    var(--bg-hover);
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-hover);
-}
-
-
-.note-workspace .graph-image-segmented > button.active {
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 18%,
-      var(--bg-input)
-    );
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--accent-primary);
-
-  box-shadow:
-    inset 0 0 0 1px
-    color-mix(
-      in srgb,
-      var(--accent-primary) 30%,
-      transparent
-    );
-}
-
-
-/* =========================================================
-   IMAGE NODE TOGGLE
-   ========================================================= */
-
-.note-workspace .graph-image-toggle-row {
-  background:
-    var(--bg-input);
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-control);
-}
-
-
-.note-workspace .graph-image-toggle-row:hover {
-  background:
-    var(--bg-hover);
-
-  border-color:
-    var(--border-hover);
-}
-
-
-.note-workspace
-.graph-image-toggle-row
-input[type="checkbox"] {
-  accent-color:
-    var(--accent-primary);
-}
-
-
-/* =========================================================
-   MODAL ACTION BUTTONS
-   ========================================================= */
-
-.note-workspace .graph-image-modal-action {
-  background:
-    var(--bg-input);
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-control);
-}
-
-
-.note-workspace .graph-image-modal-action:hover {
-  background:
-    var(--bg-hover);
-
-  border-color:
-    var(--border-hover);
-}
-
-
-.note-workspace .graph-image-modal-action.primary {
-  background:
-    var(--accent-primary);
-
-  color:
-    var(--text-on-accent);
-
-  border-color:
-    var(--accent-primary);
-}
-
-
-.note-workspace .graph-image-modal-action.primary:hover {
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 88%,
-      white
-    );
-
-  border-color:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 88%,
-      white
-    );
-}
-
-
-/*
-  Danger remains red in both themes but uses transparency
-  so the surrounding theme can show through.
-*/
-.note-workspace .graph-image-modal-action.danger {
-  background:
-    rgb(239 68 68 / 0.08);
-
-  color:
-    #ef4444;
-
-  border-color:
-    rgb(239 68 68 / 0.55);
-}
-
-
-.note-workspace .graph-image-modal-action.danger:hover {
-  background:
-    rgb(239 68 68 / 0.16);
-
-  color:
-    #ef4444;
-
-  border-color:
-    #ef4444;
-}
-
-
-/* =========================================================
-   PROPERTY MODAL TEXT INPUTS
-
-   These already mostly supported themes, but keeping them
-   here makes all three modals use one consistent surface.
-   ========================================================= */
-
-.note-workspace .graph-property-input {
-  background:
-    var(--bg-input);
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-control);
-}
-
-
-.note-workspace .graph-property-input:hover {
-  background:
-    var(--bg-hover);
-
-  border-color:
-    var(--border-hover);
-}
-
-
-.note-workspace .graph-property-input:focus {
-  background:
-    var(--bg-input);
-
-  border-color:
-    var(--border-focus);
-
-  box-shadow:
-    0 0 0 2px
-    var(--focus-ring-soft);
-}
-
-
-.note-workspace .graph-property-input::placeholder {
-  color:
-    var(--text-muted);
-}
-
-
-/* =========================================================
-   PROPERTY DROPDOWN TRIGGER
-   Parent / Owner and Conditional Scope
-
-   The menu itself already uses theme variables, so this
-   completes the trigger surface for light mode.
-   ========================================================= */
-
-.note-workspace .graph-property-dropdown-trigger {
-  background:
-    var(--bg-input);
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-control);
-}
-
-
-.note-workspace .graph-property-dropdown-trigger:hover {
-  background:
-    var(--bg-hover);
-
-  border-color:
-    var(--border-hover);
-}
-
-
-.note-workspace
-.graph-property-dropdown-trigger-open {
-  background:
-    color-mix(
-      in srgb,
-      var(--bg-panel-elevated) 92%,
-      transparent
-    );
-
-  border-color:
-    var(--border-focus);
-
-  border-bottom-color:
-    var(--border-focus);
-}
-
-
-/* ---------------------------------------------------------
-   Dropdown menu surface
-   --------------------------------------------------------- */
-
-.note-workspace .graph-property-dropdown-menu {
-  background:
-    color-mix(
-      in srgb,
-      var(--bg-panel-elevated) 96%,
-      transparent
-    );
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-primary);
-
-  box-shadow:
-    var(--shadow-overlay);
-}
-
-
-/* ---------------------------------------------------------
-   Search field
-   --------------------------------------------------------- */
-
-.note-workspace
-.graph-property-dropdown-search-wrap {
-  background:
-    var(--bg-input);
-
-  color:
-    var(--text-muted);
-
-  border-color:
-    var(--border-control);
-}
-
-
-.note-workspace
-.graph-property-dropdown-search-wrap:focus-within {
-  border-color:
-    var(--border-focus);
-
-  box-shadow:
-    0 0 0 2px
-    var(--focus-ring-soft);
-}
-
-
-.note-workspace
-.graph-property-dropdown-search {
-  color:
-    var(--text-primary);
-}
-
-
-.note-workspace
-.graph-property-dropdown-search::placeholder {
-  color:
-    var(--text-muted);
-}
-
-
-/* ---------------------------------------------------------
-   Dropdown options
-   --------------------------------------------------------- */
-
-.note-workspace .graph-property-dropdown-option {
-  color:
-    var(--text-primary);
-}
-
-
-.note-workspace
-.graph-property-dropdown-option:not(
-  .graph-property-dropdown-option-selected
-):hover {
-  background:
-    var(--accent-primary);
-
-  color:
-    var(--text-on-accent);
-}
-
-
-.note-workspace
-.graph-property-dropdown-option-selected {
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 10%,
-      transparent
-    );
-
-  color:
-    var(--text-primary);
-
-  border-color:
-    var(--border-accent);
-}
-
-
-/* =========================================================
-   MODAL SCROLLBAR
-   ========================================================= */
-
-.note-workspace .graph-image-modal-body {
-  scrollbar-width:
-    thin;
-
-  scrollbar-color:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 65%,
-      transparent
-    )
-    transparent;
-}
-
-
-.note-workspace
-.graph-image-modal-body::-webkit-scrollbar {
-  width:
-    8px;
-}
-
-
-.note-workspace
-.graph-image-modal-body::-webkit-scrollbar-track {
-  background:
-    transparent;
-}
-
-
-.note-workspace
-.graph-image-modal-body::-webkit-scrollbar-thumb {
-  background:
-    color-mix(
-      in srgb,
-      var(--accent-primary) 62%,
-      transparent
-    );
-
-  border:
-    2px solid
-    transparent;
-
-  border-radius:
-    999px;
-
-  background-clip:
-    padding-box;
-}
-
-/* =========================================================
-   GRAPH PROPERTY MODAL HEADINGS
-   Make every left-side field heading visually identical.
-   ========================================================= */
-
-.note-workspace
-.graph-property-modal
-.graph-image-control-heading {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-
-/*
-  Left-side heading text.
-
-  Covers:
-    Node type
-    Parent / owner node
-    Relationship
-    Qualifier
-    Classification
-    Edge role
-    Conditional scope
-*/
-.note-workspace
-.graph-property-modal
-.graph-image-control-heading
-> span:first-child {
-  color: var(--text-primary) !important;
-  font-weight: 600 !important;
-  opacity: 1;
-}
-
-
-/*
-  Only the optional right-side status value is muted.
-
-  Examples:
-    Conditional
-    Normal
-    Auto-detect → Standard
-*/
-.note-workspace
-.graph-property-modal
-.graph-image-control-heading
-> span + span {
-  color: var(--text-muted) !important;
-  font-weight: 500 !important;
-}
-
-/* =========================================================
-   GRAPH HEADER - AI PROCESSING DETAILS
-   Append to NoteWorkspace.css
-   ========================================================= */
-
-.note-workspace .graph-panel-header-actions {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
 
 .note-workspace .graph-header-status-slot {
   min-width: 0;
@@ -8979,353 +7011,7 @@ input[type="checkbox"] {
   overflow: hidden;
 }
 
-.note-workspace .graph-header-status,
-.note-workspace .graph-header-error {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.74rem;
-}
 
-.note-workspace .graph-header-status {
-  color: var(--text-muted);
-}
-
-.note-workspace .graph-generation-actions {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-/* =========================================================
-   AI PROCESSING HEADER BUTTON
-   Uses the same base styling as .panel-focus-button.
-   ========================================================= */
-
-.note-workspace .graph-processing-info-button {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-
-/*
-  While graph generation is active, tint the icon/border
-  without replacing the normal focus-button surface.
-*/
-.note-workspace
-.graph-processing-info-button-live {
-  color: var(--accent-primary);
-  border-color: var(--border-accent);
-}
-
-.note-workspace .graph-processing-info-button:disabled {
-  opacity: 0.42;
-  cursor: default;
-}
-
-/* =========================================================
-   LIVE PROCESSING DOT
-   ========================================================= */
-
-.note-workspace .graph-processing-live-dot {
-  position: absolute;
-
-  top: 4px;
-  right: 4px;
-
-  width: 6px;
-  height: 6px;
-
-  border-radius: 50%;
-
-  background:
-    var(--accent-primary);
-
-  box-shadow:
-    0 0 0 3px
-    color-mix(
-      in srgb,
-      var(--accent-primary) 16%,
-      transparent
-    );
-
-  pointer-events: none;
-
-  animation:
-    graph-processing-live-pulse
-    1.45s
-    ease-in-out
-    infinite;
-}
-
-
-@keyframes graph-processing-live-pulse {
-  0%,
-  100% {
-    opacity: 0.55;
-    transform: scale(0.9);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
-}
-
-/* =========================================================
-   PROCESSING STEP COUNT BADGE
-   ========================================================= */
-
-.note-workspace .graph-processing-step-count {
-  position: absolute;
-
-  right: -4px;
-  bottom: -4px;
-
-  min-width: 13px;
-  height: 13px;
-
-  box-sizing: border-box;
-
-  display: grid;
-  place-items: center;
-
-  padding: 0 2px;
-
-  border:
-    1.5px solid
-    var(--bg-panel-elevated);
-
-  border-radius: 999px;
-
-  background:
-    var(--accent-primary);
-
-  color:
-    var(--text-on-accent);
-
-  font-size: 7px;
-  font-weight: 700;
-  line-height: 1;
-
-  font-variant-numeric:
-    tabular-nums;
-
-  pointer-events: none;
-
-  z-index: 2;
-}
-
-/* =========================================================
-   AI PROCESSING MODAL
-   Reuses graph-image-modal structure/theme.
-   ========================================================= */
-
-.note-workspace .graph-ai-processing-modal {
-  width: min(620px, calc(100% - 32px));
-  max-height: min(680px, calc(100% - 36px));
-}
-
-.note-workspace .graph-ai-processing-modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 14px;
-  overflow-y: auto;
-}
-
-.note-workspace .graph-ai-processing-summary {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 11px 12px;
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-input) 78%, transparent);
-}
-
-.note-workspace .graph-ai-processing-summary > div {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.note-workspace .graph-ai-processing-summary strong {
-  color: var(--text-primary);
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.note-workspace .graph-ai-processing-summary span:not(.graph-ai-processing-state) {
-  color: var(--text-muted);
-  font-size: 0.71rem;
-  line-height: 1.45;
-}
-
-.note-workspace .graph-ai-processing-state {
-  flex: 0 0 auto;
-  min-height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-  border: 1px solid var(--border-control);
-  border-radius: 999px;
-  background: var(--bg-input);
-  color: var(--text-muted);
-  font-size: 0.66rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.note-workspace .graph-ai-processing-state.is-live {
-  border-color: var(--border-accent);
-  background: color-mix(in srgb, var(--accent-primary) 10%, var(--bg-input));
-  color: var(--accent-primary);
-}
-
-.note-workspace .graph-ai-processing-state.is-complete {
-  border-color: color-mix(in srgb, #22c55e 55%, var(--border-control));
-  background: color-mix(in srgb, #22c55e 9%, var(--bg-input));
-  color: color-mix(in srgb, #22c55e 78%, var(--text-primary));
-}
-
-.note-workspace .graph-ai-processing-empty {
-  min-height: 210px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 28px;
-  border: 1px dashed var(--border-primary);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-input) 60%, transparent);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.note-workspace .graph-ai-processing-empty strong {
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.note-workspace .graph-ai-processing-empty > span {
-  max-width: 390px;
-  font-size: 0.71rem;
-  line-height: 1.5;
-}
-
-.note-workspace .graph-ai-processing-mock-button {
-  margin-top: 6px;
-  min-height: 31px;
-  padding: 0 11px;
-  border: 1px solid var(--border-control);
-  border-radius: 6px;
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.note-workspace .graph-ai-processing-mock-button:hover {
-  border-color: var(--border-accent);
-  background: var(--bg-hover);
-  color: var(--accent-primary);
-}
-
-.note-workspace .graph-ai-processing-list {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.note-workspace .graph-ai-processing-step {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.note-workspace .graph-ai-processing-step-marker {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-accent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--accent-primary) 10%, var(--bg-input));
-  color: var(--accent-primary);
-  font-size: 0.68rem;
-  font-weight: 700;
-}
-
-.note-workspace .graph-ai-processing-step-main {
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  background: var(--bg-input);
-}
-
-.note-workspace .graph-ai-processing-step-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.note-workspace .graph-ai-processing-step-heading > div {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.note-workspace .graph-ai-processing-step-heading strong {
-  color: var(--text-primary);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.note-workspace .graph-ai-processing-step-heading span {
-  color: var(--text-muted);
-  font-size: 0.69rem;
-  line-height: 1.4;
-}
-
-.note-workspace .graph-ai-processing-step-heading > svg {
-  flex: 0 0 auto;
-  color: color-mix(in srgb, #22c55e 78%, var(--text-primary));
-}
-
-.note-workspace .graph-ai-processing-output {
-  margin: 0;
-  min-height: 36px;
-  padding: 9px 10px;
-  border: 1px solid var(--border-control);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--bg-panel-elevated) 74%, var(--bg-input));
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 0.7rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
 
 @media (max-width: 900px) {
   .note-workspace .graph-header-status-slot {
@@ -9336,10 +7022,6 @@ input[type="checkbox"] {
 @media (max-width: 720px) {
   .note-workspace .graph-header-status-slot {
     display: none;
-  }
-
-  .note-workspace .graph-ai-processing-summary {
-    flex-direction: column;
   }
 }
 
