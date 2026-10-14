@@ -285,22 +285,10 @@ registerProcessor(
 // WebSocket server: JSON config first, binary PCM16 frames while
 // listening, then { "eof": 1 } when the session ends.
 function getTranscriptionAsrWebSocketUrl() {
-  const configuredUrl =
-    import.meta.env.VITE_ASR_WS_URL?.trim();
-
-  if (configuredUrl) {
-    return configuredUrl;
-  }
-
-  if (typeof window === "undefined") {
-    return "ws://localhost:2700";
-  }
-
-  const protocol =
-    window.location.protocol === "https:"
-      ? "wss:"
-      : "ws:";
-
+  const configuredUrl = import.meta.env.VITE_ASR_WS_URL?.trim();
+  if (configuredUrl) { return configuredUrl; }
+  if (typeof window === "undefined") { return "ws://localhost:2700"; }
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.hostname}:2700`;
 }
 
@@ -454,60 +442,32 @@ function clearTranscriptionAsrCloseTimer() {
   }
 }
 
-function closeTranscriptionAsrSocket({
-  finalise = false,
-} = {}) {
-  const socket =
-    transcriptionAsrSocketRef.current;
-
+function closeTranscriptionAsrSocket({finalise = false} = {}) {
+  const socket = transcriptionAsrSocketRef.current;
   clearTranscriptionAsrCloseTimer();
-
-  if (!socket) {
-    setTranscriptionAsrState("idle");
-    return;
-  }
+  if (!socket) { setTranscriptionAsrState("idle"); return; }
 
   transcriptionAsrExpectedCloseRef.current = true;
 
-  if (
-    finalise &&
-    socket.readyState === WebSocket.OPEN
-  ) {
+  if (finalise && socket.readyState === WebSocket.OPEN) {
     setTranscriptionAsrState("finalising");
-
     try {
       socket.send('{"eof" : 1}');
-
       // Vosk normally returns its final result and then closes the
       // connection itself. This timeout prevents a stuck socket if a
       // proxy/backend fails to honour that convention.
-      transcriptionAsrCloseTimerRef.current =
-        window.setTimeout(() => {
-          if (
-            transcriptionAsrSocketRef.current === socket &&
-            socket.readyState !== WebSocket.CLOSED
-          ) {
+      transcriptionAsrCloseTimerRef.current = window.setTimeout(() => {
+          if (transcriptionAsrSocketRef.current === socket && socket.readyState !== WebSocket.CLOSED) {
             socket.close(1000, "Transcription complete");
           }
         }, 2500);
-
       return;
-    } catch {
-      // Fall through to a normal close.
-    }
+    } catch { } // Fall through to a normal close.
   }
 
-  if (
-    socket.readyState === WebSocket.OPEN ||
-    socket.readyState === WebSocket.CONNECTING
-  ) {
-    try {
-      socket.close(1000, "Transcription closed");
-    } catch {
-      // Ignore close failures during teardown.
-    }
+  if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+    try { socket.close(1000, "Transcription closed"); } catch { } // Ignore close failures during teardown.
   }
-
   if (transcriptionAsrSocketRef.current === socket) {
     transcriptionAsrSocketRef.current = null;
   }
@@ -516,91 +476,43 @@ function closeTranscriptionAsrSocket({
 }
 
 function handleTranscriptionAsrMessage(event) {
-  if (typeof event.data !== "string") {
-    return;
-  }
-
+  if (typeof event.data !== "string") { return; }
   let message;
-
-  try {
-    message = JSON.parse(event.data);
-  } catch {
-    return;
-  }
-
+  try { message = JSON.parse(event.data); } catch { return; }
   if (message?.error) {
-    setTranscriptionAsrError(
-      String(message.error)
-    );
+    setTranscriptionAsrError(String(message.error));
     setTranscriptionAsrState("error");
     return;
   }
-
   // Native Vosk responses use `partial` for interim text and `text`
   // for accepted/final segments. A future TreeNotes proxy may instead
   // normalise these to { type: "partial|final", text }, so accept both.
-  const partialText =
-    typeof message.partial === "string"
-      ? message.partial
-      : message.type === "partial" &&
-          typeof message.text === "string"
-        ? message.text
-        : null;
-
+  const partialText = typeof message.partial === "string" ? message.partial : message.type === "partial" &&
+          typeof message.text === "string" ? message.text : null;
   if (partialText !== null) {
-    transcriptionAsrPartialRef.current =
-      partialText;
-
+    transcriptionAsrPartialRef.current = partialText;
     updateLiveTranscriptionDraft();
     return;
   }
-
-  const finalText =
-    message.type === "final" &&
-    typeof message.text === "string"
-      ? message.text
-      : typeof message.text === "string"
-        ? message.text
-        : "";
-
-  const cleanFinalText =
-    finalText
-      .replace(/\s+/g, " ")
-      .trim();
-
+  const finalText = message.type === "final" &&
+  typeof message.text === "string" ? message.text : typeof message.text === "string" ? message.text : "";
+  const cleanFinalText = finalText.replace(/\s+/g, " ").trim();
   transcriptionAsrPartialRef.current = "";
-
   if (cleanFinalText) {
-    const finalSegments =
-      transcriptionAsrFinalSegmentsRef.current;
-
-    if (
-      finalSegments[finalSegments.length - 1] !==
-      cleanFinalText
-    ) {
-      finalSegments.push(cleanFinalText);
-    }
+    const finalSegments = transcriptionAsrFinalSegmentsRef.current;
+    if (finalSegments[finalSegments.length - 1] !== cleanFinalText) { finalSegments.push(cleanFinalText); }
   }
-
   updateLiveTranscriptionDraft();
 }
 
-function connectTranscriptionAsr(
-  sampleRate,
-  requestId
-) {
+function connectTranscriptionAsr(sampleRate, requestId) {
   if (typeof WebSocket === "undefined") {
-    return Promise.reject(
-      new Error(
-        "This browser does not support WebSocket speech recognition."
-      )
-    );
+    return Promise.reject(new Error("This browser does not support WebSocket speech recognition."));
   }
 
   closeTranscriptionAsrSocket();
 
-  const socketUrl =
-    getTranscriptionAsrWebSocketUrl();
+  const socketUrl = getTranscriptionAsrWebSocketUrl();
 
   setTranscriptionAsrError("");
   setTranscriptionAsrState("connecting");
@@ -610,9 +522,8 @@ function connectTranscriptionAsr(
     let settled = false;
     let socket;
 
-    try {
-      socket = new WebSocket(socketUrl);
-    } catch (error) {
+    try { socket = new WebSocket(socketUrl); }
+    catch (error) {
       setTranscriptionAsrState("error");
       reject(error);
       return;
@@ -621,33 +532,17 @@ function connectTranscriptionAsr(
     transcriptionAsrSocketRef.current = socket;
     socket.binaryType = "arraybuffer";
 
-    const connectionTimeout =
-      window.setTimeout(() => {
-        if (settled) {
-          return;
-        }
-
+    const connectionTimeout = window.setTimeout(() => {
+        if (settled) { return; }
         settled = true;
 
-        try {
-          socket.close();
-        } catch {
-          // Ignore timeout close errors.
-        }
+        try { socket.close(); } catch {} // Ignore timeout close errors.
 
-        reject(
-          new Error(
-            `Timed out connecting to the speech recognition service at ${socketUrl}.`
-          )
-        );
+        reject(new Error(`Timed out connecting to the speech recognition service at ${socketUrl}.`));
       }, 5000);
 
     socket.onopen = () => {
-      if (
-        requestId !==
-          transcriptionCaptureRequestRef.current ||
-        !transcriptionModalOpenRef.current
-      ) {
+      if (requestId !== transcriptionCaptureRequestRef.current || !transcriptionModalOpenRef.current) {
         transcriptionAsrExpectedCloseRef.current = true;
         socket.close();
         return;
@@ -655,99 +550,49 @@ function connectTranscriptionAsr(
 
       window.clearTimeout(connectionTimeout);
 
-      try {
-        socket.send(
-          JSON.stringify({
-            config: {
-              sample_rate: sampleRate,
-            },
-          })
-        );
-      } catch (error) {
-        if (!settled) {
-          settled = true;
-          reject(error);
-        }
+      try { socket.send(JSON.stringify({ config: { sample_rate: sampleRate } })); }
+      catch (error) {
+        if (!settled) { settled = true; reject(error); }
         return;
       }
-
       setTranscriptionAsrState("connected");
-
-      if (!settled) {
-        settled = true;
-        resolve(socket);
-      }
+      if (!settled) { settled = true; resolve(socket); }
     };
 
-    socket.onmessage =
-      handleTranscriptionAsrMessage;
-
+    socket.onmessage = handleTranscriptionAsrMessage;
     socket.onerror = () => {
       if (!settled) {
         window.clearTimeout(connectionTimeout);
         settled = true;
-
-        reject(
-          new Error(
-            `Unable to connect to the speech recognition service at ${socketUrl}.`
-          )
-        );
+        reject(new Error(`Unable to connect to the speech recognition service at ${socketUrl}.`));
       }
     };
 
     socket.onclose = () => {
       window.clearTimeout(connectionTimeout);
       clearTranscriptionAsrCloseTimer();
-
-      if (
-        transcriptionAsrSocketRef.current ===
-        socket
-      ) {
-        transcriptionAsrSocketRef.current = null;
-      }
-
-      const expectedClose =
-        transcriptionAsrExpectedCloseRef.current;
-
+      if (transcriptionAsrSocketRef.current === socket) { transcriptionAsrSocketRef.current = null; }
+      const expectedClose = transcriptionAsrExpectedCloseRef.current;
       transcriptionAsrExpectedCloseRef.current = false;
-
       if (!settled) {
         settled = true;
-
-        reject(
-          new Error(
-            `The speech recognition service at ${socketUrl} closed before transcription could start.`
-          )
-        );
-
+        reject(new Error(`The speech recognition service at ${socketUrl} closed before transcription could start.`));
         return;
       }
 
-      if (expectedClose) {
-        setTranscriptionAsrState("idle");
-        return;
-      }
+      if (expectedClose) { setTranscriptionAsrState("idle"); return; }
 
       if (transcriptionStreamRef.current) {
-        setTranscriptionAsrError(
-          "The speech recognition connection closed unexpectedly. Start listening again to reconnect."
-        );
+        setTranscriptionAsrError("The speech recognition connection closed unexpectedly. Start listening again to reconnect.");
         setTranscriptionAsrState("error");
-
-        releaseTranscriptionAudioResources({
-          keepCaptureSummary: true,
-        });
-      } else {
-        setTranscriptionAsrState("idle");
+        releaseTranscriptionAudioResources({ keepCaptureSummary: true });
       }
+      else { setTranscriptionAsrState("idle"); }
     };
   });
 }
 
-function releaseTranscriptionAudioResources({
-  keepCaptureSummary = true,
-  updateUi = true,
-} = {}) {
+function releaseTranscriptionAudioResources({keepCaptureSummary = true, updateUi = true, } = {}) {
   const sampleRate =
     transcriptionCaptureSampleRateRef.current;
 
@@ -870,11 +715,7 @@ function closeTranscriptionModal() {
   setTranscriptionModalOpen(false);
 }
 
-function handleCapturedPcmChunk(
-  pcmChunk,
-  sampleRate,
-  level = null
-) {
+function handleCapturedPcmChunk(pcmChunk, sampleRate, level = null) {
   if (!pcmChunk || pcmChunk.length === 0) {
     return;
   }
@@ -958,9 +799,7 @@ function handleCapturedPcmChunk(
   }
 }
 
-function convertFloatSamplesToPcm(
-  floatSamples
-) {
+function convertFloatSamplesToPcm(floatSamples) {
   const pcm = new Int16Array(
     floatSamples.length
   );
@@ -1040,40 +879,22 @@ function getMicrophoneErrorMessage(error) {
 }
 
 async function startTranscriptionCapture() {
-  if (
-    transcriptionListening ||
-    transcriptionMicRequesting
-  ) {
+  if (transcriptionListening || transcriptionMicRequesting) { return; }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setTranscriptionMicError("Microphone access is unavailable. Use HTTPS or localhost in a browser that supports getUserMedia().");
     return;
   }
 
-  if (
-    !navigator.mediaDevices?.getUserMedia
-  ) {
-    setTranscriptionMicError(
-      "Microphone access is unavailable. Use HTTPS or localhost in a browser that supports getUserMedia()."
-    );
-
-    return;
-  }
-
-  const AudioContextClass =
-    window.AudioContext ||
-    window.webkitAudioContext;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
   if (!AudioContextClass) {
-    setTranscriptionMicError(
-      "This browser does not support the Web Audio API required for microphone capture."
-    );
-
+    setTranscriptionMicError("This browser does not support the Web Audio API required for microphone capture.");
     return;
   }
 
-  const requestId =
-    transcriptionCaptureRequestRef.current + 1;
-
-  transcriptionCaptureRequestRef.current =
-    requestId;
+  const requestId = transcriptionCaptureRequestRef.current + 1;
+  transcriptionCaptureRequestRef.current = requestId;
 
   setTranscriptionMicError("");
   setTranscriptionAsrError("");
@@ -1082,11 +903,9 @@ async function startTranscriptionCapture() {
   setTranscriptionCaptureInfo(null);
   setTranscriptionAudioLevel(0);
 
-  transcriptionAsrSessionBaseRef.current =
-    transcriptionDraft.trimEnd();
+  transcriptionAsrSessionBaseRef.current = transcriptionDraft.trimEnd();
   transcriptionAsrFinalSegmentsRef.current = [];
   transcriptionAsrPartialRef.current = "";
-
   transcriptionCapturedSamplesRef.current = 0;
   transcriptionCapturedBytesRef.current = 0;
   transcriptionCaptureSampleRateRef.current = 0;
@@ -1101,8 +920,7 @@ async function startTranscriptionCapture() {
   let workletUrl = null;
 
   try {
-    stream =
-      await navigator.mediaDevices.getUserMedia({
+    stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
           echoCancellation: true,
@@ -1112,15 +930,8 @@ async function startTranscriptionCapture() {
         video: false,
       });
 
-    if (
-      requestId !==
-        transcriptionCaptureRequestRef.current ||
-      !transcriptionModalOpenRef.current
-    ) {
-      stream
-        .getTracks()
-        .forEach((track) => track.stop());
-
+    if (requestId !== transcriptionCaptureRequestRef.current || !transcriptionModalOpenRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
       return;
     }
 
@@ -1130,86 +941,35 @@ async function startTranscriptionCapture() {
       value is always read from audioContext.sampleRate and reported
       to the future backend.
     */
-    try {
-      audioContext =
-        new AudioContextClass({
-          sampleRate: 16000,
-        });
-    } catch {
-      audioContext =
-        new AudioContextClass();
-    }
+
+    try { audioContext = new AudioContextClass({ sampleRate: 16000 }); }
+    catch { audioContext = new AudioContextClass(); }
 
     await audioContext.resume();
+    await connectTranscriptionAsr(audioContext.sampleRate, requestId);
 
-    await connectTranscriptionAsr(
-      audioContext.sampleRate,
-      requestId
-    );
+    source = audioContext.createMediaStreamSource(stream);
 
-    source =
-      audioContext.createMediaStreamSource(
-        stream
-      );
-
-    silentGain =
-      audioContext.createGain();
-
+    silentGain = audioContext.createGain();
     silentGain.gain.value = 0;
 
-    const canUseAudioWorklet =
-      Boolean(audioContext.audioWorklet) &&
-      typeof AudioWorkletNode !==
-        "undefined";
+    const canUseAudioWorklet = Boolean(audioContext.audioWorklet) && typeof AudioWorkletNode !== "undefined";
 
     if (canUseAudioWorklet) {
-      workletUrl =
-        URL.createObjectURL(
-          new Blob(
-            [
-              TRANSCRIPTION_PCM_WORKLET_SOURCE,
-            ],
-            {
-              type: "application/javascript",
-            }
-          )
-        );
+      workletUrl = URL.createObjectURL(new Blob([TRANSCRIPTION_PCM_WORKLET_SOURCE], { type: "application/javascript" }));
 
-      await audioContext.audioWorklet.addModule(
-        workletUrl
-      );
+      await audioContext.audioWorklet.addModule(workletUrl);
 
-      captureNode =
-        new AudioWorkletNode(
+      captureNode = new AudioWorkletNode(
           audioContext,
           "treenotes-pcm-capture",
-          {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            channelCount: 1,
-          }
+          { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1 }
         );
 
-      captureNode.port.onmessage = (
-        event
-      ) => {
-        const data =
-          event.data ?? {};
-
-        if (
-          data.type !== "pcm" ||
-          !(data.pcm instanceof ArrayBuffer)
-        ) {
-          return;
-        }
-
-        handleCapturedPcmChunk(
-          new Int16Array(data.pcm),
-          audioContext.sampleRate,
-          Number.isFinite(data.level)
-            ? data.level
-            : null
-        );
+      captureNode.port.onmessage = (event) => {
+        const data = event.data ?? {};
+        if (data.type !== "pcm" || !(data.pcm instanceof ArrayBuffer)) { return; }
+        handleCapturedPcmChunk(new Int16Array(data.pcm), audioContext.sampleRate, Number.isFinite(data.level) ? data.level : null);
       };
     } else {
       /*
@@ -1218,161 +978,75 @@ async function startTranscriptionCapture() {
         unavailable. Modern Chromium/Firefox/Safari should take the
         AudioWorklet path above.
       */
-      captureNode =
-        audioContext.createScriptProcessor(
-          2048,
-          1,
-          1
-        );
+      captureNode = audioContext.createScriptProcessor(2048, 1, 1);
 
-      captureNode.onaudioprocess = (
-        event
-      ) => {
-        const input =
-          event.inputBuffer
-            .getChannelData(0);
-
-        const {
-          pcm,
-          level,
-        } =
-          convertFloatSamplesToPcm(
-            input
-          );
-
-        handleCapturedPcmChunk(
-          pcm,
-          audioContext.sampleRate,
-          level
-        );
+      captureNode.onaudioprocess = (event) => {
+        const input = event.inputBuffer.getChannelData(0);
+        const { pcm, level } = convertFloatSamplesToPcm(input);
+        handleCapturedPcmChunk(pcm, audioContext.sampleRate, level);
       };
     }
 
     source.connect(captureNode);
     captureNode.connect(silentGain);
-    silentGain.connect(
-      audioContext.destination
-    );
-
-    transcriptionStreamRef.current =
-      stream;
-
-    transcriptionAudioContextRef.current =
-      audioContext;
-
-    transcriptionAudioSourceRef.current =
-      source;
-
-    transcriptionCaptureNodeRef.current =
-      captureNode;
-
-    transcriptionSilentGainRef.current =
-      silentGain;
-
-    transcriptionWorkletUrlRef.current =
-      workletUrl;
-
-    transcriptionCaptureSampleRateRef.current =
-      audioContext.sampleRate;
+    silentGain.connect(audioContext.destination);
+    transcriptionStreamRef.current = stream;
+    transcriptionAudioContextRef.current = audioContext;
+    transcriptionAudioSourceRef.current = source;
+    transcriptionCaptureNodeRef.current = captureNode;
+    transcriptionSilentGainRef.current = silentGain;
+    transcriptionWorkletUrlRef.current = workletUrl;
+    transcriptionCaptureSampleRateRef.current = audioContext.sampleRate;
 
     setTranscriptionCaptureInfo({
       durationSeconds: 0,
-      sampleRate:
-        audioContext.sampleRate,
+      sampleRate: audioContext.sampleRate,
       bytes: 0,
       complete: false,
     });
 
     setTranscriptionListening(true);
   } catch (error) {
-    console.error(
-      "Unable to start microphone capture:",
-      error
-    );
+    console.error("Unable to start microphone capture:", error);
 
     if (captureNode) {
       try {
-        if (
-          "port" in captureNode &&
-          captureNode.port
-        ) {
-          captureNode.port.onmessage = null;
-        }
-
-        if ("onaudioprocess" in captureNode) {
-          captureNode.onaudioprocess = null;
-        }
-
+        if ("port" in captureNode && captureNode.port) { captureNode.port.onmessage = null; }
+        if ("onaudioprocess" in captureNode) { captureNode.onaudioprocess = null; }
         captureNode.disconnect();
-      } catch {
-        // Ignore partial setup cleanup failures.
-      }
+      } catch { } // Ignore partial setup cleanup failures.
     }
 
     if (source) {
-      try {
-        source.disconnect();
-      } catch {
-        // Ignore partial setup cleanup failures.
-      }
+      try { source.disconnect(); } catch {  } // Ignore partial setup cleanup failures.
     }
 
     if (silentGain) {
-      try {
-        silentGain.disconnect();
-      } catch {
-        // Ignore partial setup cleanup failures.
-      }
+      try { silentGain.disconnect(); } catch {  } // Ignore partial setup cleanup failures.
     }
 
-    if (stream) {
-      stream
-        .getTracks()
-        .forEach((track) => track.stop());
-    }
+    if (stream) { stream.getTracks().forEach((track) => track.stop()); }
 
-    if (
-      audioContext &&
-      audioContext.state !== "closed"
-    ) {
-      audioContext.close().catch(() => {});
-    }
+    if (audioContext && audioContext.state !== "closed") { audioContext.close().catch(() => {}); }
 
-    if (workletUrl) {
-      URL.revokeObjectURL(workletUrl);
-    }
+    if (workletUrl) { URL.revokeObjectURL(workletUrl); }
 
     closeTranscriptionAsrSocket();
 
-    if (
-      requestId ===
-      transcriptionCaptureRequestRef.current
-    ) {
-      const isAsrConnectionError =
-        /speech recognition service|WebSocket/i.test(
-          error?.message ?? ""
-        );
+    if (requestId === transcriptionCaptureRequestRef.current) {
+      const isAsrConnectionError = /speech recognition service|WebSocket/i.test(error?.message ?? "" );
 
       if (isAsrConnectionError) {
-        setTranscriptionAsrError(
-          error.message
-        );
+        setTranscriptionAsrError(error.message);
         setTranscriptionAsrState("error");
       } else {
-        setTranscriptionMicError(
-          getMicrophoneErrorMessage(error)
-        );
+        setTranscriptionMicError(getMicrophoneErrorMessage(error));
       }
 
       setTranscriptionListening(false);
     }
   } finally {
-    if (
-      requestId ===
-      transcriptionCaptureRequestRef.current
-    ) {
-      setTranscriptionMicRequesting(false);
-    }
+    if (requestId === transcriptionCaptureRequestRef.current) { setTranscriptionMicRequesting(false); }
   }
 }
 
@@ -1387,26 +1061,22 @@ function toggleTranscriptionListening() {
 
 function addTranscriptionTerm() {
   const cleanTerm = transcriptionTermInput.trim();
-
-  if (!cleanTerm) {
-    return;
-  }
-
-  const alreadyAdded = transcriptionTerms.some(
-    (term) => term.toLocaleLowerCase() === cleanTerm.toLocaleLowerCase()
-  );
-
+  if (!cleanTerm) { return; }
+  const alreadyAdded = transcriptionTerms.some((term) => term.toLocaleLowerCase() === cleanTerm.toLocaleLowerCase());
   if (!alreadyAdded) {
     setTranscriptionTerms((current) => [...current, cleanTerm]);
+    fetch("/asr/lexicon", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ term: cleanTerm })
+    }).catch(() => {});
   }
-
   setTranscriptionTermInput("");
 }
 
 function removeTranscriptionTerm(termToRemove) {
-  setTranscriptionTerms((current) =>
-    current.filter((term) => term !== termToRemove)
-  );
+  setTranscriptionTerms((current) => current.filter((term) => term !== termToRemove));
+  fetch(`/asr/lexicon/${encodeURIComponent(termToRemove)}`, { method: "DELETE" }).catch(() => {});
 }
 
 function clearTranscriptionDraft() {

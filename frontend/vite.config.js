@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react(),],
 
+  define: {
+    "import.meta.env.VITE_ASR_WS_URL": JSON.stringify("ws://localhost:8001/ws"),
+  },
+
   build: {
     cssMinify: "esbuild",
   },
@@ -12,11 +16,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target:
-          "http://localhost:8000",
-
-        changeOrigin:
-          false,
+        target: "http://localhost:8000",
+        changeOrigin: false,
       },
     },
   },

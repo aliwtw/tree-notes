@@ -349,23 +349,7 @@ function normaliseEdgeClassification(value) {
   if (["negative", "negation", "negated"].includes(cleanValue)) {
     return "negative";
   }
-  if ([
-    "affirmative",
-    "affirmation",
-    "positive",
-    "asserted",
-
-    /*
-      Backwards compatibility for graphs saved while TreeNotes still used
-      the old prerequisite classification. Those edges now migrate into the
-      affirmative presentation instead of becoming an unknown class.
-    */
-
-    "prerequisite",
-    "pre-requisite",
-    "prereq",
-    "requirement",
-  ].includes(cleanValue)) {
+  if (["affirmative", "affirmation", "positive", "asserted"].includes(cleanValue)) {
     return "affirmative";
   }
   return cleanValue;
@@ -1375,230 +1359,80 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
     };
   }, [noteId]);
   async function generateGraph() {
-    // =======================================================
-    // VALIDATE NOTES
-    // =======================================================
-    const notes = rawNotes?.trim();
-    if (!notes) {
+    if (!rawNotes || rawNotes.trim() === "") {
       setError("Please write some notes before generating a graph.");
       return;
     }
-    // =======================================================
-    // CANCEL ANY PREVIOUS STREAM
-    // =======================================================
-    if (graphStreamAbortRef.current) {
-      graphStreamAbortRef.current.abort();
-    }
-    const controller = new AbortController();
-    graphStreamAbortRef.current = controller;
+
     setLoading(true);
     setError("");
-    setAiProcessingStatus("Starting AI processing…");
-    setAiProcessingComplete(false);
-    setAiProcessingMock(false);
+
     try {
-      // =====================================================
-      // START STREAMING REQUEST
-      // =====================================================
-      const response = await fetch("/api/graph/stream", {
+      const response = await fetch("/api/graph", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        signal: controller.signal,
         body: JSON.stringify({
-          noteId: noteId ?? null,
-
-          /*
-            IMPORTANT:
-
-            rawNotes should already be the plain-text
-            representation supplied by NoteWorkspace.
-
-            Do not send notes_section_html here.
-          */
-
-          rawNotes: notes,
+          rawNotes: rawNotes,
         }),
       });
-      // =====================================================
-      // HTTP-LEVEL ERRORS
-      // =====================================================
+
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        // Leave data empty so the fallback error below can be used.
+      }
+
       if (!response.ok) {
-        let message = "Graph generation failed. Please try again.";
-        try {
-          const contentType = response.headers.get("content-type") || "";
-          if (contentType.includes("application/json")) {
-            const data = await response.json();
-            if (typeof data?.detail === "string") {
-              message = data.detail;
-            } else if (Array.isArray(data?.detail)) {
-              message = data.detail
-                  .map((item) => String(item.msg)
-                    .replace(/^Value error, /, ""))
-                  .join(" ");
-            } else if (typeof data?.message === "string") {
-              message = data.message;
-            }
-          } else {
-            const text = await response.text();
-            if (text.trim()) {
-              message = text.trim();
-            }
-          }
-        }
-        catch {
+        let message =
+          "Graph generation failed. Please try again.";
 
-          /*
-            Keep the normal fallback error message
-            if the server response cannot be parsed.
-          */
-
+        if (typeof data?.detail === "string") {
+          message = data.detail;
+        } else if (Array.isArray(data?.detail)) {
+          message = data.detail
+            .map((item) =>
+              String(item.msg).replace(
+                /^Value error, /,
+                ""
+              )
+            )
+            .join(" ");
         }
+
         throw new Error(message);
       }
-      // =====================================================
-      // MAKE SURE THE BROWSER GAVE US A STREAM
-      // =====================================================
-      if (!response.body) {
-        throw new Error("Graph streaming is not available in this browser.");
-      }
-      // =====================================================
-      // CREATE STREAM READER
-      // =====================================================
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
 
       /*
-        Network chunks do NOT necessarily line up with
-        JSON objects.
-
-        For example, one chunk could contain:
-
-          {"type":"no
-
-        and the next:
-
-          de","data":...}\n
-
-        So we keep incomplete text here until a newline
-        tells us that one complete NDJSON event exists.
+        Replace the current graph with the completed
+        graph returned by the backend.
       */
+      setGraphData({
+        nodes: Array.isArray(data?.nodes)
+          ? data.nodes
+          : [],
+        edges: Array.isArray(data?.edges)
+          ? data.edges
+          : [],
+      });
 
-      let buffer = "";
-      // =====================================================
-      // READ STREAM
-      // =====================================================
-      while (true) {
-        const { value, done, } = await reader.read();
-        if (done) {
-          break;
-        }
+    } catch (error) {
+      console.error(
+        "Graph generation error:",
+        error
+      );
 
-        /*
-          Convert the Uint8Array network chunk into text.
+      setError(
+        error.message ||
+          "Unable to generate graph. Please try again."
+      );
 
-          stream: true tells TextDecoder that the next
-          chunk may continue a character from this one.
-        */
-
-        buffer += decoder.decode(value, {
-            stream: true,
-          });
-
-        /*
-          One chunk may contain:
-
-            one event
-            several events
-            part of an event
-
-          Split only on newline boundaries.
-        */
-
-        const lines = buffer.split("\n");
-
-        /*
-          The final item might be incomplete.
-
-          Keep it in the buffer for the next read.
-        */
-
-        buffer = lines.pop() ?? "";
-        for (const rawLine of lines) {
-          const line = rawLine.trim();
-          if (!line) {
-            continue;
-          }
-          try {
-            const event = JSON.parse(line);
-
-            /*
-              This is the function we already tested
-              using testGraphStreaming().
-            */
-
-            handleGraphStreamEvent(event);
-          }
-          catch (parseError) {
-            console.error("Unable to parse graph stream event:", line, parseError);
-          }
-        }
-      }
-      // =====================================================
-      // FLUSH TEXTDECODER
-      // =====================================================
-      buffer += decoder.decode();
-
-      /*
-        Usually every backend event ends in \\n.
-
-        This fallback lets us safely process a final JSON
-        event even if the final newline was omitted.
-      */
-
-      const finalLine = buffer.trim();
-      if (finalLine) {
-        try {
-          const finalEvent = JSON.parse(finalLine);
-          handleGraphStreamEvent(finalEvent);
-        }
-        catch (parseError) {
-          console.error("Unable to parse final graph stream event:", finalLine, parseError);
-        }
-      }
-    }
-    catch (error) {
-      // =====================================================
-      // REQUEST CANCELLED
-      // =====================================================
-      if (error?.name === "AbortError") {
-        console.log("Graph generation stream cancelled.");
-        return;
-      }
-      // =====================================================
-      // REQUEST FAILED
-      // =====================================================
-      console.error("Graph generation error:", error);
-      setError(error?.message || "Unable to generate graph. Please try again.");
-      setAiProcessingStatus("Generation stopped");
-      setAiProcessingComplete(false);
-    }
-    finally {
-
-      /*
-        Only clear the ref if this is still the
-        currently active request.
-
-        This matters if another request was started
-        while an older request was shutting down.
-      */
-
-      if (graphStreamAbortRef.current === controller) {
-        graphStreamAbortRef.current = null;
-        setLoading(false);
-      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -3180,8 +3014,8 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
   function isEdgeAnnotationElement(element) {
     const internalType = String(element?.data?.("graphInternal") || "");
     return (internalType === "edge-qualifier-label" || internalType === "edge-adjunct-label" ||
-      internalType === "edge-negative-mark" || internalType === "edge-affirmative-mark" ||
-      internalType === "edge-prerequisite-tag");
+      internalType === "edge-negative-mark" || internalType === "edge-affirmative-mark"
+    );
   }
 
   function clearEdgeAnnotationPresentation(cy = cyRef.current) {
@@ -4164,9 +3998,6 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
       const resolvedClassification = normaliseEdgeClassification(edge.data("classification"));
       edge.data("resolvedClassification", resolvedClassification);
 
-      /* Remove presentation data left behind by the retired prerequisite style. */
-      edge.removeData("prerequisiteBadgeColor");
-      edge.removeData("prerequisiteBadgeTextColor");
       const sourceNode = edge.source();
       const targetNode = edge.target();
       const sourceIsConditional = normaliseNodeType(sourceNode.data("nodeType"), sourceNode.data("conditionOwnerId")) === "conditional";
@@ -4362,7 +4193,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         label: "",
         "text-opacity": 0,
         padding: 8,
-        "compound-sizing-wrt-label": "exclude",
+        "compound-sizing-wrt-labels": "exclude",
         "overlay-opacity": 0,
         events: "no",
       })
@@ -4406,7 +4237,8 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         "target-arrow-color": graphTheme.edgeArrow,
         "target-arrow-shape": "triangle",
         "line-style": "solid",
-        "curve-style": "straight",
+        "curve-style": "bezier",
+        "control-point-step-size": 40,
         color: graphTheme.edgeLabel,
         opacity: 0.8,
         label: "data(displayLabel)",
@@ -4545,7 +4377,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         "line-style": "solid",
         "arrow-scale": 1.25,
         color: CONDITIONAL_NODE_DEFAULT_COLOR,
-        "font-weight": "700",
+        "font-weight": "bold",
         opacity: 1,
       })
       .selector('edge[resolvedEdgeRole = "reification"][conditionColor]')
@@ -6187,7 +6019,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
             label: "",
             "text-opacity": 0,
             padding: 8,
-            "compound-sizing-wrt-label": "exclude",
+            "compound-sizing-wrt-labels": "exclude",
             "overlay-opacity": 0,
             events: "no",
           },
@@ -6369,7 +6201,8 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
             "line-color": graphTheme.edge,
             "target-arrow-color": graphTheme.edgeArrow,
             "target-arrow-shape": "triangle",
-            "curve-style": "straight",
+            "curve-style": "bezier",
+            "control-point-step-size": 40,
             opacity: 0.8,
             "arrow-scale": 1.1,
 
@@ -6561,7 +6394,7 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
             "line-style": "solid",
             "arrow-scale": 1.25,
             color: CONDITIONAL_NODE_DEFAULT_COLOR,
-            "font-weight": "700",
+            "font-weight": "bold",
             opacity: 1,
           },
         },
@@ -8132,8 +7965,8 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
       } : current);
 
     /*
-      Prerequisite badges inherit the selected edge colour, so refresh the
-      derived badge and annotation presentation immediately.
+      Refresh derived edge semantics and annotation presentation
+      after changing the edge colour.
     */
 
     syncConditionalGraphSemantics(cyRef.current);
