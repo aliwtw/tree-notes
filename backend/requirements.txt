@@ -12,3 +12,4 @@ email-validator==2.3.0
 # Not imported directly, but pinned because fastapi only sets a minimum version for them
 starlette==1.7.0
 pydantic==2.13.5
+httpx

@@ -1,0 +1,7 @@
+vosk
+fastapi
+uvicorn[standard]
+requests
+langdetect
+simpletransformers==0.70.5
+transformers==4.35.0

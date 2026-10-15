@@ -6,6 +6,7 @@ import {
   ChevronsRight,
   Plus,
   Trash2,
+  Search,
   X,
 } from "lucide-react";
 
@@ -30,15 +31,25 @@ function Sidebar({
   activeView,
 }) {
 
-  const [noteToDelete, setNoteToDelete] =
-    useState(null);
+  const [noteToDelete, setNoteToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
-  const [deleteLoading, setDeleteLoading] =
-    useState(false);
+  const [noteSearch, setNoteSearch] = useState("");
 
-  const [deleteError, setDeleteError] =
-    useState("");
+  const filteredNotes = notes.filter((note) => {
+    const query = noteSearch.trim().toLowerCase();
 
+    if (!query) {
+      return true;
+    }
+
+    const title = note.title || "Untitled Note";
+
+    return title
+      .toLowerCase()
+      .includes(query);
+  });
 
   async function handleConfirmDelete() {
 
@@ -144,97 +155,97 @@ function Sidebar({
 
           <div className="sidebar-note-list">
 
+            {notes.length > 0 && (
+              <div className="sidebar-note-search-wrap">
+                <Search
+                  size={13}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
+
+                <input
+                  type="text"
+                  className="sidebar-note-search"
+                  value={noteSearch}
+                  onChange={(event) =>
+                    setNoteSearch(event.target.value)
+                  }
+                  placeholder="Search notes..."
+                  aria-label="Search notes"
+                />
+              </div>
+            )}
+
             <div className="sidebar-note-scroll">
 
               {notes.length > 0 ? (
 
-                notes.map((note) => {
+                filteredNotes.length > 0 ? (
 
-                  const isSelected =
-                    note.id === selectedNoteId;
+                  filteredNotes.map((note) => {
+                    const isSelected =
+                      note.id === selectedNoteId;
 
-
-                  return (
-
-                    <div
-                      key={note.id}
-                      className={`sidebar-note-row ${
-                        isSelected
-                          ? "sidebar-note-row-active"
-                          : ""
-                      }`}
-                    >
-
-                      <button
-                        type="button"
-
-                        className={`sidebar-note-button ${
+                    return (
+                      <div
+                        key={note.id}
+                        className={`sidebar-note-row ${
                           isSelected
-                            ? "sidebar-note-button-active"
+                            ? "sidebar-note-row-active"
                             : ""
                         }`}
-
-                        onClick={() =>
-                          onSelectNote(note.id)
-                        }
-
-
                       >
+                        <button
+                          type="button"
+                          className={`sidebar-note-button ${
+                            isSelected
+                              ? "sidebar-note-button-active"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            onSelectNote(note.id)
+                          }
+                        >
+                          <span className="sidebar-note-title">
+                            {note.title || "Untitled Note"}
+                          </span>
+                        </button>
 
-                        <span className="sidebar-note-title">
+                        <button
+                          type="button"
+                          className="sidebar-note-delete-button"
+                          aria-label={`Delete ${
+                            note.title || "Untitled Note"
+                          }`}
+                          data-tooltip="Delete note"
+                          onClick={(event) => {
+                            event.stopPropagation();
 
-                          {note.title ||
-                            "Untitled Note"}
+                            setDeleteError("");
+                            setNoteToDelete(note);
+                          }}
+                        >
+                          <Trash2
+                            size={14}
+                            strokeWidth={1.8}
+                          />
+                        </button>
+                      </div>
+                    );
+                  })
 
-                        </span>
+                ) : (
 
-                      </button>
+                  <div className="sidebar-note-empty">
+                    No matching notes
+                  </div>
 
-
-                      <button
-                        type="button"
-
-                        className="sidebar-note-delete-button"
-
-                        aria-label={`Delete ${
-                          note.title ||
-                          "Untitled Note"
-                        }`}
-
-                        data-tooltip="Delete note"
-
-                        onClick={(event) => {
-
-                          event.stopPropagation();
-
-                          setDeleteError("");
-
-                          setNoteToDelete(
-                            note
-                          );
-
-                        }}
-                      >
-
-                        <Trash2
-                          size={14}
-                          strokeWidth={1.8}
-                        />
-
-                      </button>
-
-                    </div>
-
-                  );
-
-                })
+                )
 
               ) : (
 
                 <div className="sidebar-note-empty">
-
                   No notes yet
-
                 </div>
 
               )}

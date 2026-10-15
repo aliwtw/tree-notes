@@ -37,6 +37,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+      asr:
+        condition: service_started
     volumes:
       - ./backend:/app/backend
       - /var/run/docker.sock:/var/run/docker.sock
@@ -88,6 +90,25 @@ services:
       - ollama:/root/.ollama
     # GPU CONFIG MOVED TO docker-compose.override.yml
 
+  asr:
+    build:
+      context: .
+      dockerfile: backend/asr/Dockerfile
+    container_name: asr
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      HF_HOME: /models/hf
+      PYTHONWARNINGS: ignore::FutureWarning
+    volumes:
+      - asr_models:/models
+      - ./backend/asr:/app/backend/asr
+    # GPU CONFIG MOVED TO docker-compose.override.yml
+
+
 volumes:
   postgres_data:
   ollama:
+  asr_models:

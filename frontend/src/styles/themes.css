@@ -197,6 +197,7 @@
   --graph-link-mode-text: #c7d2fe;
 
   --graph-node-accent: #6366f1;
+  --graph-edge-label: #cbd5e1;
 
   /* ---------------------------------------------------------
      Graph nodes / selection / edges
@@ -477,6 +478,7 @@
   --graph-link-mode-text: #4338ca;
 
   --graph-node-accent: #625df0;
+  --graph-edge-label: #334155;
 
   /* ---------------------------------------------------------
      Graph nodes / selection / edges

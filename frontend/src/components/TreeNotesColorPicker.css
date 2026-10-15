@@ -1,0 +1,828 @@
+/* =========================================================
+   TREENOTES COLOUR PICKER
+   ========================================================= */
+
+.treenotes-color-picker {
+  position: fixed;
+
+  z-index: 10000;
+
+  width: 254px;
+
+  max-height:
+    calc(100dvh - 20px);
+
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    var(--border-control);
+
+  border-radius: 9px;
+
+  background:
+    var(--bg-panel-secondary);
+
+  color:
+    var(--text-primary);
+
+  box-shadow:
+    var(
+      --shadow-popover,
+      0 12px 34px
+      rgba(0, 0, 0, 0.32)
+    );
+
+  font: inherit;
+
+  user-select: none;
+}
+
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.treenotes-color-picker-section {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.treenotes-color-picker-section
++
+.treenotes-color-picker-section {
+  margin-top: 8px;
+}
+
+
+.treenotes-color-picker-section-title {
+  color:
+    var(--text-muted-light);
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.055em;
+}
+
+
+.treenotes-color-picker-divider {
+  height: 1px;
+
+  margin:
+    8px
+    0;
+
+  background:
+    var(--border-subtle);
+}
+
+
+/* =========================================================
+   PRESET SWATCHES
+   ========================================================= */
+
+.treenotes-color-picker-swatches {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      8,
+      1fr
+    );
+
+  gap: 5px;
+}
+
+
+.treenotes-color-swatch,
+.treenotes-custom-color-add {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border:
+    1px solid
+    rgba(
+      128,
+      140,
+      160,
+      0.38
+    );
+
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+
+.treenotes-color-swatch:hover:not(.treenotes-custom-color-add) {
+  transform:
+    scale(1.1);
+
+  border-color:
+    var(--accent-primary);
+
+  box-shadow:
+    0 0 0 2px
+    var(--bg-panel-elevated);
+}
+
+
+.treenotes-color-swatch.is-selected {
+  border:
+    2px solid
+    var(--accent-primary);
+
+  box-shadow:
+    0 0 0 2px
+    var(--bg-panel-elevated),
+    0 0 0 4px
+    var(--accent-primary);
+}
+
+/* =========================================================
+   CUSTOM COLOURS
+   ========================================================= */
+
+.treenotes-custom-colors {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      8,
+      1fr
+    );
+
+  gap: 5px;
+}
+
+/* =========================================================
+   SATURATION / BRIGHTNESS AREA
+   ========================================================= */
+
+.treenotes-color-sv {
+  position: relative;
+
+  height: 102px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--border-control);
+
+  border-radius: 7px;
+
+  cursor: crosshair;
+
+  touch-action: none;
+
+  background:
+    linear-gradient(
+      to top,
+      #000000,
+      transparent
+    ),
+    linear-gradient(
+      to right,
+      #ffffff,
+      var(
+        --treenotes-picker-hue
+      )
+    );
+}
+
+
+.treenotes-color-sv-thumb {
+  position: absolute;
+
+  width: 13px;
+  height: 13px;
+
+  border:
+    2px solid
+    #ffffff;
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(
+      0,
+      0,
+      0,
+      0.65
+    );
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   HUE CONTROL
+   ========================================================= */
+
+.treenotes-color-hue-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 7px;
+}
+
+
+.treenotes-current-color {
+  width: 23px;
+  height: 23px;
+
+  flex-shrink: 0;
+
+  border:
+    2px solid
+    var(--border-control);
+
+  border-radius: 50%;
+}
+
+
+.treenotes-color-hue-slider {
+  width: 100%;
+
+  height: 8px;
+
+  margin: 0;
+
+  appearance: none;
+
+  border:
+    1px solid
+    var(--border-control);
+
+  border-radius: 999px;
+
+  outline: none;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(
+      to right,
+      #ff0000,
+      #ffff00,
+      #00ff00,
+      #00ffff,
+      #0000ff,
+      #ff00ff,
+      #ff0000
+    );
+}
+
+
+/* Chrome / Edge */
+
+.treenotes-color-hue-slider::-webkit-slider-thumb {
+  width: 15px;
+  height: 15px;
+
+  appearance: none;
+
+  border:
+    2px solid
+    #ffffff;
+
+  border-radius: 50%;
+
+  background:
+    var(--accent-primary);
+
+  box-shadow:
+    0 0 0 1px
+    rgba(
+      0,
+      0,
+      0,
+      0.55
+    );
+}
+
+
+/* Firefox */
+
+.treenotes-color-hue-slider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+
+  border:
+    2px solid
+    #ffffff;
+
+  border-radius: 50%;
+
+  background:
+    var(--accent-primary);
+
+  box-shadow:
+    0 0 0 1px
+    rgba(
+      0,
+      0,
+      0,
+      0.55
+    );
+}
+
+
+/* =========================================================
+   HEX / RGB / HSL TABS
+   ========================================================= */
+
+.treenotes-color-mode-tabs {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      1fr
+    );
+
+  gap: 3px;
+
+  margin-top: 8px;
+
+  padding: 2px;
+
+  border:
+    1px solid
+    var(--border-subtle);
+
+  border-radius: 7px;
+
+  background:
+    var(--bg-input);
+}
+
+.treenotes-color-mode-tab {
+  height: 24px;
+
+  padding:
+    0
+    6px;
+
+  border: none;
+
+  border-radius: 5px;
+
+  background:
+    transparent;
+
+  color:
+    var(--text-muted-light);
+
+  font: inherit;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.treenotes-color-mode-tab:hover {
+  color:
+    var(--text-primary);
+
+  background:
+    var(--bg-hover);
+}
+
+
+.treenotes-color-mode-tab.is-active {
+  color:
+    var(--text-on-accent);
+
+  background:
+    var(--accent-primary);
+}
+
+
+/* =========================================================
+   VALUE INPUTS
+   ========================================================= */
+
+.treenotes-color-value-single,
+.treenotes-color-channel-grid {
+  margin-top: 6px;
+}
+
+
+.treenotes-color-value-single {
+  display: grid;
+
+  grid-template-columns:
+    42px
+    1fr;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+.treenotes-color-value-single label {
+  color:
+    var(--text-muted);
+
+  font-size: 10px;
+
+  font-weight: 700;
+}
+
+
+.treenotes-color-value-single input,
+.treenotes-color-channel-grid input {
+  width: 100%;
+
+  min-width: 0;
+
+  height: 27px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    var(--border-control);
+
+  border-radius: 5px;
+
+  outline: none;
+
+  background:
+    var(--bg-input);
+
+  color:
+    var(--text-primary);
+
+  font: inherit;
+
+  font-size: 10px;
+
+  text-align: center;
+}
+
+
+.treenotes-color-value-single input:focus,
+.treenotes-color-channel-grid input:focus {
+  border-color:
+    var(--accent-primary);
+
+  box-shadow:
+    0 0 0 2px
+    var(--bg-accent-soft);
+}
+
+
+.treenotes-color-channel-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      1fr
+    );
+
+  gap: 7px;
+}
+
+
+.treenotes-color-channel-grid label {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  color:
+    var(--text-muted);
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+.treenotes-color-channel-grid input {
+  appearance: textfield;
+}
+
+
+.treenotes-color-channel-grid
+input::-webkit-inner-spin-button,
+.treenotes-color-channel-grid
+input::-webkit-outer-spin-button {
+  appearance: none;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   CURRENT COLOUR FOOTER
+   ========================================================= */
+
+.treenotes-color-current-footer {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-top: 12px;
+
+  padding-top: 10px;
+
+  border-top:
+    1px solid
+    var(--border-subtle);
+
+  color:
+    var(--text-muted);
+
+  font-size: 10px;
+}
+
+
+.treenotes-color-current-value {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color:
+    var(--text-primary);
+}
+
+
+.treenotes-color-current-value > span {
+  width: 18px;
+  height: 18px;
+
+  border:
+    1px solid
+    var(--border-control);
+
+  border-radius: 4px;
+}
+
+
+.treenotes-color-current-value strong {
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.03em;
+}
+
+/* =========================================================
+   NONE / CLEAR COLOUR OPTION
+   ========================================================= */
+
+.treenotes-color-none-button {
+  width: 100%;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 0 9px;
+
+  border:
+    1px solid
+    var(--border-control);
+
+  border-radius: 6px;
+
+  background:
+    var(--bg-input);
+
+  color:
+    var(--text-secondary);
+
+  font: inherit;
+  font-size: 11px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+
+.treenotes-color-none-button span {
+  flex: 1;
+
+  text-align: left;
+}
+
+
+.treenotes-color-none-button:hover:not(:disabled) {
+  border-color:
+    var(--accent-primary);
+
+  background:
+    var(--bg-input-focus);
+
+  color:
+    var(--text-primary);
+}
+
+
+.treenotes-color-none-button.is-selected {
+  border-color:
+    var(--accent-primary);
+
+  color:
+    var(--accent-primary);
+}
+
+
+.treenotes-color-none-button:disabled {
+  opacity: 0.38;
+
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   COLOUR PICKER TOOLTIP
+   ========================================================= */
+
+.treenotes-picker-tooltip {
+  position: fixed;
+  z-index: 10050;
+  width: max-content;
+  max-width: 190px;
+  padding: 6px 9px;
+  border: 1px solid var(--border-control);
+  border-radius: 7px;
+  background: var(--bg-tooltip);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-popover);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+
+.treenotes-picker-tooltip::before,
+.treenotes-picker-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.treenotes-picker-tooltip::before {
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: var(--border-control);
+}
+
+.treenotes-picker-tooltip::after {
+  top: calc(100% - 1px);
+  border: 5px solid transparent;
+  border-top-color: var(--bg-tooltip);
+}
+
+.treenotes-picker-tooltip.is-below {
+  transform: translate(-50%, 0);
+}
+
+.treenotes-picker-tooltip.is-below::before {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--border-control);
+}
+
+.treenotes-picker-tooltip.is-below::after {
+  top: auto;
+  bottom: calc(100% - 1px);
+  border-top-color: transparent;
+  border-bottom-color: var(--bg-tooltip);
+}
+
+/* =========================================================
+   CUSTOM COLOUR CONTROLS
+   ========================================================= */
+
+/* Custom swatches keep the same circular geometry as presets. */
+.treenotes-custom-colors > .treenotes-color-swatch {
+  box-sizing: border-box;
+  border-radius: 50% !important;
+}
+
+/*
+ * Save-current-colour button:
+ * uses the exact same swatch geometry everywhere.
+ * Only colour changes on hover, never size/position.
+ */
+.treenotes-color-picker .treenotes-custom-color-add {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  outline: none;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transform: none !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.treenotes-color-picker .treenotes-custom-color-add:hover,
+.treenotes-color-picker .treenotes-custom-color-add:focus-visible {
+  transform: none !important;
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  box-shadow: 0 0 0 2px var(--bg-panel-elevated);
+}
+
+/*
+ * Real SVG icon instead of pseudo-elements.
+ * This avoids half-pixel antialiasing and guarantees the same
+ * centre/scale in toolbar, graph and context-menu pickers.
+ */
+.treenotes-color-picker .treenotes-custom-color-add-icon {
+  position: static !important;
+  display: block !important;
+  width: 13px !important;
+  height: 13px !important;
+  min-width: 13px !important;
+  min-height: 13px !important;
+  flex: 0 0 13px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  translate: none !important;
+  stroke: currentColor;
+  pointer-events: none;
+}
