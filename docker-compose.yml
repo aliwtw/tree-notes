@@ -37,6 +37,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+      ollama-init:
+        condition: service_completed_successfully
       asr:
         condition: service_started
     volumes:
@@ -82,18 +84,54 @@ services:
         condition: service_healthy
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.33.0
     container_name: ollama
     ports:
       - "11434:11434"
+    environment:
+      OLLAMA_LLM_LIBRARY: cpu_avx2
     volumes:
       - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     # GPU CONFIG MOVED TO docker-compose.override.yml
+
+  ollama-init:
+    image: ollama/ollama:0.33.0
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:latest}
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+    - |
+      echo "Checking Ollama model: $$OLLAMA_MODEL"
+
+      if ollama show "$$OLLAMA_MODEL" > /dev/null 2>&1; then
+        echo "Ollama model already installed: $$OLLAMA_MODEL"
+      else
+        echo "Ollama model not found. Downloading..."
+        ollama pull "$$OLLAMA_MODEL"
+      fi
+
+      echo "Ollama model ready."
+    restart: "no"
 
   asr:
     build:
       context: .
       dockerfile: backend/asr/Dockerfile
+    depends_on:
+      asr-model-init:
+        condition: service_completed_successfully
     container_name: asr
     ports:
       - "8001:8000"
@@ -107,6 +145,50 @@ services:
       - ./backend/asr:/app/backend/asr
     # GPU CONFIG MOVED TO docker-compose.override.yml
 
+  asr-model-init:
+    image: alpine:3.20
+    environment:
+      ASR_DIR: /models
+      ASR_DEFAULT_MODEL: ${ASR_DEFAULT_MODEL:-en-us}
+    volumes:
+      - asr_models:/models
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - |
+        set -e
+
+        MODEL_DIR="$$ASR_DIR/$$ASR_DEFAULT_MODEL"
+
+        echo "Checking Vosk model at $$MODEL_DIR"
+
+        if [ -f "$$MODEL_DIR/conf/model.conf" ] && [ -d "$$MODEL_DIR/am" ]; then
+          echo "Vosk model already installed."
+          exit 0
+        fi
+
+        echo "Vosk model missing. Downloading..."
+
+        apk add --no-cache curl unzip
+
+        cd /tmp
+
+        curl -fL \
+          https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip \
+          -o vosk-model.zip
+
+        unzip -q vosk-model.zip
+
+        rm -rf "$$MODEL_DIR"
+
+        mkdir -p "$$ASR_DIR"
+
+        mv vosk-model-small-en-us-0.15 "$$MODEL_DIR"
+
+        echo "Vosk model installed at $$MODEL_DIR"
+        echo "ASR model ready."
+    restart: "no"
 
 volumes:
   postgres_data:
