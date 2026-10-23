@@ -24,10 +24,10 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from backend.routers import ai_adapter, auth, groups, notes, profile
 
-from backend.ai.ai import warm_ollama
+from backend.ai.config import warm_ollama
 
 app = FastAPI(
-        title = "Treenotes APi",
+        title = "Treenotes API",
         version = "0.1.0",
         description = "backend api test"
 )

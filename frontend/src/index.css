@@ -119,7 +119,7 @@ html {
 
   scrollbar-color:
     var(--page-scrollbar-thumb)
-    var(--page-scrollbar-track);
+    transparent;
 }
 
 

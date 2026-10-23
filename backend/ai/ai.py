@@ -11,6 +11,10 @@ EXPLICIT_MODEL = os.getenv("OLLAMA_MODEL")
 
 ACTIVE_MODEL = SMALL_MODEL
 
+# Number of model layers Ollama should offload to GPU.
+# Default to CPU-only for stability on machines where GPU inference crashes.
+OLLAMA_NUM_GPU = int(os.getenv("OLLAMA_NUM_GPU", "0"))
+
 ### Simple Prompts for use in Frontend Testing
 
 (
@@ -46,7 +50,8 @@ def warm_ollama():
     resp = requests.post(OLLAMA_URL, json={
         "model": ACTIVE_MODEL,
         "prompt": "Warm-up prompt",
-        "stream": False
+        "stream": False,
+        "options": { "num_gpu": OLLAMA_NUM_GPU }
     })
     _ = resp.json() # forces Ollama to load fully
 
@@ -212,8 +217,8 @@ Your JSON to analyse:
 
 ## HELPER FUNCTIONS ~~~~~~~~~~~~~~~~
 
-def create_payload(prompt):
-    return { "model": ACTIVE_MODEL, "prompt": prompt, "stream": False }
+def create_payload(prompt, stream=False):
+    return { "model": ACTIVE_MODEL, "prompt": prompt, "stream": stream }
 
 def run_ollama_prompt(prompt: str) -> dict:
     r = requests.post(OLLAMA_URL, json=create_payload(prompt))
@@ -235,13 +240,167 @@ def minify_json(json_obj: dict) -> str:
     except Exception:
         return "" # in case the model returned JSON malformed
 
+### AI Graph Helper Functions ~~~~~~~~~
+
+def extract_json_object(text):
+    depth = 0
+    start = None
+
+    for i, char in enumerate(text):
+        if char == "{":
+            if start is None:
+                start = i
+            depth += 1
+
+        elif char == "}":
+            depth -= 1
+
+            if depth == 0 and start is not None:
+                raw = text[start:i + 1]
+
+                try:
+                    return json.loads(raw), text[i + 1:]
+                except json.JSONDecodeError:
+                    pass
+    return None, text
+
+## OLLAMA PROMPTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def create_payload(prompt: str, stream: bool):
+    return { "model": ACTIVE_MODEL, "prompt": prompt, "stream": stream, "options": { "temperature": 0, "num_gpu": OLLAMA_NUM_GPU } }
+
+def run_ollama_prompt(prompt: str, is_json=True) -> dict:
+    r = requests.post(OLLAMA_URL, json=create_payload(prompt, stream=False))
+    r.raise_for_status()
+    raw = (
+        r.json()
+        .get("response", "")
+        .strip()
+        .replace("```json", "")
+        .replace("```", "")
+        .strip()
+    )
+
+    return json.loads(raw) if is_json else raw
+
+def open_ollama_stream(prompt: str) -> requests.Response:
+    r = requests.post(OLLAMA_URL, json=create_payload(prompt, stream=True), stream=True)
+    r.raise_for_status()
+    return r
+
+def iter_graph_objects(prompt):
+    response = open_ollama_stream(prompt)
+    buffer = ""
+
+    for line in response.iter_lines():
+        if not line: continue
+
+        chunk = json.loads(line)
+        if "response" not in chunk: continue
+
+        buffer += chunk["response"]
+
+        while True:
+            obj, remaining = extract_json_object(buffer)
+            if obj is None: break
+            yield obj
+            buffer = remaining
+
+### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ### AI Generate Graph JSON ~~~~~~~~~
 
-def ai_generate_graph(prompt: str) -> ConceptGraphResponse:
-    return cast(
-        ConceptGraphResponse,
-        run_ollama_prompt(concept_extraction_template + "\n<<<\n" + prompt + "\n>>>")
-    )
+def ai_generate_graph(text: str):
+     node_prompt = f"""
+     You are preparing a knowledge graph from a provided Source Text. You are required to extract the nodes of the graph, and provide a label.
+
+     Your output must ONLY be the following json:
+     {{"id":str, "label": str}}
+
+     Produce your output in the same order in which the nodes appear from the text.
+
+     EXAMPLE 1
+     Source Text: "Stars form inside massive clouds of dust and gas called nebulas. Gravity pulls this material closely together, causing pressure and temperature to rise in the core. When the core gets hot enough, nuclear fusion triggers, allowing a bright new star to ignite. Without enough mass, the process fails, and a weak brown dwarf forms instead."
+     Output: {{"id": "stars", "label": "stars"}},{{"id": "clouds", "label": "clouds"}},{{"id": "dust-gas", "label": "dust and gas"}},{{"id": "gravity", "label": "gravity"}},{{"id": "pressure", "label": "pressure"}},{{"id": "temperature", "label": "temperature"}},{{"id": "core", "label": "core"}},{{"id": "nuclear fusion", "label": "nuclear fusion"}},{{"id": "new star", "label": "new star"}},{{"id": "mass", "label": "mass"}},{{"id": "brown dwarf star", "label": "brown dwarf star"}}
+
+     EXAMPLE 2
+     Source Text: "Brains process new information by forming temporary neural connections during the day. Sleep stabilizes these fragile links, allowing short-term memories to move into permanent storage. When sleep is disrupted, this critical consolidation process fails, making it difficult to recall facts. Without enough rest, people struggle to retain new knowledge and focus."
+     Output: {{"id": "brains", "label": "brains"}},{{"id": "new information", "label": "new information"}},{{"id": "temporary neural connections", "label": "temporary neural connections"}},{{"id": "sleep", "label": "sleep"}},{{"id": "short-term memories", "label": "short-term memories"}},{{"id": "permanent storage", "label": "permanent storage"}},{{"id": "consolidation process", "label": "consolidation process"}},{{"id": "facts", "label": "facts"}},{{"id": "rest", "label": "rest"}},{{"id": "people", "label": "people"}},{{"id": "new knowledge", "label": "new knowledge"}},{{"id": "focus", "label": "focus"}}
+
+     EXAMPLE 3
+     Source Text: "Firewalls block unauthorized data from entering private computer networks. Artificial intelligence monitors this incoming traffic, allowing systems to catch hidden digital threats instantly. When a cyberattack occurs, security protocols isolate the infected files to stop the spread. Without regular updates, systems become vulnerable and struggle to defend against new viruses."
+     Output: {{"id": "firewalls", "label": "firewalls"}},{{"id": "unauthorized data", "label": "unauthorized data"}},{{"id": "private computer networks", "label": "private computer networks"}},{{"id": "artificial intelligence", "label": "artificial intelligence"}},{{"id": "incoming traffic", "label": "incoming traffic"}},{{"id": "systems", "label": "systems"}},{{"id": "hidden digital threats", "label": "hidden digital threats"}},{{"id": "cyberattack", "label": "cyberattack"}},{{"id": "security protocols", "label": "security protocols"}},{{"id": "infected files", "label": "infected files"}},{{"id": "regular updates", "label": "regular updates"}},{{"id": "new viruses", "label": "new viruses"}}
+
+     EXAMPLE 4
+     Source Text: "Wolves hunt in highly organized packs to bring down large prey. Alpha leaders coordinate the chase, allowing the group to surround targets without being spotted. When a target is isolated, the younger wolves move in to complete the hunt. Without a clear social hierarchy, the pack becomes chaotic and struggles to secure food."
+     Output: {{"id": "wolves", "label": "wolves"}},{{"id": "organized packs", "label": "organized packs"}},{{"id": "large prey", "label": "large prey"}},{{"id": "alpha leaders", "label": "alpha leaders"}},{{"id": "chase", "label": "chase"}},{{"id": "group", "label": "group"}},{{"id": "targets", "label": "targets"}},{{"id": "younger wolves", "label": "younger wolves"}},{{"id": "hunt", "label": "hunt"}},{{"id": "social hierarchy", "label": "social hierarchy"}},{{"id": "pack", "label": "pack"}},{{"id": "food", "label": "food"}}
+
+     Your Source Text from which to extract Nodes:
+     {text}
+     """
+     nodes = []
+     for n in iter_graph_objects(node_prompt):
+         nodes.append(n)
+         yield {"type": "node", "data": n}
+
+     edge_prompt = f"""
+     You are preparing a knowledge graph from a provided Source Text and a given list of Nodes. You are required to extract the edges of the graph, providing a source node, target, node, and their relationship ("label").
+
+     Your output must ONLY be the following json:
+     {{"id":str, "source":str, "target": str, "label": str}}
+
+     RULES
+     1. The Source Text is your Ground Truth Reference materials; the Node List are the concepts from the Source Text between which relationships should exist.
+     2. Do NOT invent or force relationships that are not explicitly presented by the Source Text.
+     3. Do NOT invent new Nodes: The Node List is IMMUTABLE.
+     4. If a Node from the Node List doesn't have an explicit verb which relates it with another Node List item, leave it; Do NOT force a connection when one doesn't exist.
+     5. The edge "id" field is simply the "source" and "target" conjoined with a '-' hyphen character.
+     6. The edge "source" and "target" fields must be derived verbatim from the Nodes List.
+     7. The edge "relation" must be derived from the Source Text ONLY; if a long phrase is used in the Text as the relationship (label), shorten it to within 1-3 words (by dropping terms like "the", "its", pronouns, etc)
+
+     Produce your output in the order in which nodes appear in the Nodes List, seeking for their contextual references in the Source Text.
+
+     Suggested Workflow:
+     1. Retrieve node list item i.
+     2. Look in the Source Text for verbs connecting node[i] with other nodes from the Node List.
+     3. From the Source Text: if node[i] has a verb or connection to another concept which is EXCLUDED from the Node List, LEAVE IT and move to the next connecting item in the Source Text.
+     4. From the Source Text: if node[i] has a verb or connection to another concept which is INCLUDED from the Node List, OUTPUT that edge connection, and move to the next connecting item in the Source Text.
+     5. Continue process for each item in the Node List.
+
+     EXAMPLE 1
+     Source Text: "Stars form inside massive clouds of dust and gas called nebulas. Gravity pulls this material closely together, causing pressure and temperature to rise in the core. When the core gets hot enough, nuclear fusion triggers, allowing a bright new star to ignite. Without enough mass, the process fails, and a weak brown dwarf forms instead."
+     Node List: [{{"id": "stars", "label": "stars"}},{{"id": "clouds", "label": "clouds"}},{{"id": "dust-gas", "label": "dust and gas"}},{{"id": "gravity", "label": "gravity"}},{{"id": "pressure", "label": "pressure"}},{{"id": "temperature", "label": "temperature"}},{{"id": "core", "label": "core"}},{{"id": "nuclear fusion", "label": "nuclear fusion"}},{{"id": "new star", "label": "new star"}},{{"id": "mass", "label": "mass"}},{{"id": "brown dwarf star", "label": "brown dwarf star"}}]
+     Output: {{"id":"clouds-stars", "source":"clouds", "target": "stars", "label": "form"}}, {{"id":"clouds-dust-gas", "source":"clouds", "target": "dust-gas", "label": "are nebulas of"}}, {{"id":"gravity-pressure", "source":"gravity", "target": "pressure", "label": "pulls material"}}, {{"id":"gravity-temperature", "source":"gravity", "target": "temperature", "label": "pulls material"}}, {{"id":"pressure-core", "source":"pressure", "target": "core", "label": "rise"}}, {{"id":"temperature-core", "source":"temperature", "target": "core", "label": "rise"}}, {{"id":"core-nuclear fusion", "source":"core", "target": "nuclear fusion", "label": "hot enough"}}, {{"id":"nuclear fusion-new star", "source":"nuclear fusion", "target": "new star", "label": "ignite"}}, {{"id":"mass-brown dwarf star", "source":"mass", "target": "brown dwarf star", "label": "without enough process fails"}}
+
+     EXAMPLE 2
+     Source Text: "Brains process new information by forming temporary neural connections during the day. Sleep stabilizes these fragile links, allowing short-term memories to move into permanent storage. When sleep is disrupted, this critical consolidation process fails, making it difficult to recall facts. Without enough rest, people struggle to retain new knowledge and focus."
+     Node List: [{{"id": "brains", "label": "brains"}},{{"id": "new information", "label": "new information"}},{{"id": "temporary neural connections", "label": "temporary neural connections"}},{{"id": "sleep", "label": "sleep"}},{{"id": "short-term memories", "label": "short-term memories"}},{{"id": "permanent storage", "label": "permanent storage"}},{{"id": "consolidation process", "label": "consolidation process"}},{{"id": "facts", "label": "facts"}},{{"id": "rest", "label": "rest"}},{{"id": "people", "label": "people"}},{{"id": "new knowledge", "label": "new knowledge"}},{{"id": "focus", "label": "focus"}}]
+     Output: {{"id":"brains-new information", "source":"brains", "target": "new information", "label": "process"}}, {{"id":"brains-temporary neural connections", "source":"brains", "target": "temporary neural connections", "label": "forming"}}, {{"id":"sleep-temporary neural connections", "source":"sleep", "target": "temporary neural connections", "label": "stabilizes"}}, {{"id":"sleep-short-term memories", "source":"sleep", "target": "short-term memories", "label": "stabilizes"}}, {{"id":"short-term memories-permanent storage", "source":"short-term memories", "target": "permanent storage", "label": "move into"}}, {{"id":"consolidation process-facts", "source":"consolidation process", "target": "facts", "label": "recall"}}, {{"id":"rest-new knowledge", "source":"rest", "target": "new knowledge", "label": "without enough struggle to retain"}}, {{"id":"rest-focus", "source":"rest", "target": "focus", "label": "without enough struggle to"}}
+
+     EXAMPLE 3
+     Source Text: "Firewalls block unauthorized data from entering private computer networks. Artificial intelligence monitors this incoming traffic, allowing systems to catch hidden digital threats instantly. When a cyberattack occurs, security protocols isolate the infected files to stop the spread. Without regular updates, systems become vulnerable and struggle to defend against new viruses."
+     Node List: [{{"id": "firewalls", "label": "firewalls"}},{{"id": "unauthorized data", "label": "unauthorized data"}},{{"id": "private computer networks", "label": "private computer networks"}},{{"id": "artificial intelligence", "label": "artificial intelligence"}},{{"id": "incoming traffic", "label": "incoming traffic"}},{{"id": "systems", "label": "systems"}},{{"id": "hidden digital threats", "label": "hidden digital threats"}},{{"id": "cyberattack", "label": "cyberattack"}},{{"id": "security protocols", "label": "security protocols"}},{{"id": "infected files", "label": "infected files"}},{{"id": "regular updates", "label": "regular updates"}},{{"id": "new viruses", "label": "new viruses"}}]
+     Output: {{"id":"firewalls-unauthorized data", "source":"firewalls", "target": "unauthorized data", "label": "block"}}, {{"id":"unauthorized data-private computer networks", "source":"unauthorized data", "target": "private computer networks", "label": "entering"}}, {{"id":"artificial intelligence-incoming traffic", "source":"artificial intelligence", "target": "incoming traffic", "label": "monitors"}}, {{"id":"systems-hidden digital threats", "source":"systems", "target": "hidden digital threats", "label": "catch"}}, {{"id":"cyberattack-security protocols", "source":"cyberattack", "target": "security protocols", "label": "triggers"}}, {{"id":"security protocols-infected files", "source":"security protocols", "target": "infected files", "label": "isolate"}}, {{"id":"regular updates-systems", "source":"regular updates", "target": "systems", "label": "without become vulnerable"}}, {{"id":"systems-new viruses", "source":"systems", "target": "new viruses", "label": "struggle to defend against"}}
+
+     EXAMPLE 4
+     Source Text: "Wolves hunt in highly organized packs to bring down large prey. Alpha leaders coordinate the chase, allowing the group to surround targets without being spotted. When a target is isolated, the younger wolves move in to complete the hunt. Without a clear social hierarchy, the pack becomes chaotic and struggles to secure food."
+     Node List: [{{"id": "wolves", "label": "wolves"}},{{"id": "organized packs", "label": "organized packs"}},{{"id": "large prey", "label": "large prey"}},{{"id": "alpha leaders", "label": "alpha leaders"}},{{"id": "chase", "label": "chase"}},{{"id": "group", "label": "group"}},{{"id": "targets", "label": "targets"}},{{"id": "younger wolves", "label": "younger wolves"}},{{"id": "hunt", "label": "hunt"}},{{"id": "social hierarchy", "label": "social hierarchy"}},{{"id": "pack", "label": "pack"}},{{"id": "food", "label": "food"}}]
+     Output: {{"id":"wolves-organized packs", "source":"wolves", "target": "organized packs", "label": "hunt in"}}, {{"id":"organized packs-large prey", "source":"organized packs", "target": "large prey", "label": "bring down"}}, {{"id":"alpha leaders-chase", "source":"alpha leaders", "target": "chase", "label": "coordinate"}}, {{"id":"group-targets", "source":"group", "target": "targets", "label": "surround"}}, {{"id":"younger wolves-hunt", "source":"younger wolves", "target": "hunt", "label": "move in to complete"}}, {{"id":"social hierarchy-pack", "source":"social hierarchy", "target": "pack", "label": "without becomes chaotic"}}, {{"id":"pack-food", "source":"pack", "target": "food", "label": "struggles to secure"}}
+
+     Your Source Text:
+     {text}
+
+     Your Node List:
+     {json.dumps(nodes)}
+     """
+     edges_count = 0
+     for e in iter_graph_objects(edge_prompt):
+         edges_count += 1
+         yield {"type": "edge", "data": e}
+
+     yield {"type": "done", "stats": {"nodes": len(nodes), "edges": edges_count}}
+
+     return
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

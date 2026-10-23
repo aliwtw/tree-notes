@@ -4,10 +4,18 @@ import {
   Sparkles,
   Check,
   NotebookPen,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 
 
-function SummaryPanel({ rawNotes, summary, onSummaryChange }) {
+function SummaryPanel({
+  rawNotes,
+  summary,
+  onSummaryChange,
+  isFocused = false,
+  onToggleFocus,
+}) {
 
   // =========================================================
   // FRONTEND VIEW STATE
@@ -367,6 +375,38 @@ function SummaryPanel({ rawNotes, summary, onSummaryChange }) {
             <span>
               {aiButtonText}
             </span>
+          </button>
+
+          <button
+            type="button"
+            className="panel-focus-button tooltip-align-right"
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleFocus?.();
+            }}
+            aria-label={
+              isFocused
+                ? "Exit Summary focus mode"
+                : "Focus Summary"
+            }
+            aria-pressed={isFocused}
+            data-tooltip={
+              isFocused
+                ? "Restore layout"
+                : "Focus Summary"
+            }
+          >
+            {isFocused ? (
+              <Minimize2
+                size={18}
+                strokeWidth={1.9}
+              />
+            ) : (
+              <Maximize2
+                size={18}
+                strokeWidth={1.9}
+              />
+            )}
           </button>
 
         </div>

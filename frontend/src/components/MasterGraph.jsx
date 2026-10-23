@@ -1,6 +1,107 @@
 import { useEffect, useRef } from "react";
 import cytoscape from "cytoscape";
 
+const GROUP_COLORS = [
+  "#6366F1", // purple
+  "#06B6D4", // cyan
+  "#22C55E", // green
+  "#F59E0B", // amber
+  "#EC4899", // pink
+  "#3B82F6", // blue
+  "#14B8A6", // teal
+  "#F97316", // orange
+];
+
+function assignGroupColors(
+  noteNodes,
+  noteEdges
+) {
+  const adjacency = new Map();
+
+  noteNodes.forEach((node) => {
+    adjacency.set(
+      node.data.id,
+      []
+    );
+  });
+
+  noteEdges.forEach((edge) => {
+    const {
+      source,
+      target,
+    } = edge.data;
+
+    adjacency
+      .get(source)
+      ?.push(target);
+
+    adjacency
+      .get(target)
+      ?.push(source);
+  });
+
+  const visited = new Set();
+  let groupIndex = 0;
+
+  noteNodes.forEach((node) => {
+    const nodeId = node.data.id;
+
+    if (visited.has(nodeId)) {
+      return;
+    }
+
+    const color =
+      GROUP_COLORS[
+        groupIndex %
+        GROUP_COLORS.length
+      ];
+
+    groupIndex += 1;
+
+    const stack = [nodeId];
+
+    while (stack.length > 0) {
+      const currentId =
+        stack.pop();
+
+      if (
+        visited.has(currentId)
+      ) {
+        continue;
+      }
+
+      visited.add(currentId);
+
+      const currentNode =
+        noteNodes.find(
+          (item) =>
+            item.data.id ===
+            currentId
+        );
+
+      if (currentNode) {
+        currentNode.data.groupColor =
+          color;
+      }
+
+      const neighbours =
+        adjacency.get(currentId) || [];
+
+      neighbours.forEach(
+        (neighbour) => {
+          if (
+            !visited.has(neighbour)
+          ) {
+            stack.push(neighbour);
+          }
+        }
+      );
+    }
+  });
+
+  return noteNodes;
+}
+
 function getThemeToken(
   tokenName,
   fallback
@@ -114,17 +215,24 @@ function MasterGraph({
       return;
     }
 
-    const noteNodes = notes.map((note) => ({
-        data: {
-            id: `note-${note.id}`,
-            noteId: note.id,
-            label:
-            note.title?.trim() ||
-            "Untitled Note",
-        },
-        }));
+    const noteEdges =
+  buildNoteEdges(notes);
 
-        const noteEdges = buildNoteEdges(notes);
+const noteNodes =
+  assignGroupColors(
+    notes.map((note) => ({
+      data: {
+        id: `note-${note.id}`,
+        noteId: note.id,
+
+        label:
+          note.title?.trim() ||
+          "Untitled Note",
+      },
+    })),
+
+    noteEdges
+  );
 
         const elements = [
         ...noteNodes,
@@ -155,8 +263,8 @@ function MasterGraph({
             width: 150,
             height: 60,
             shape: "round-rectangle",
-            "background-color": 
-              graphTheme.nodeBackground,
+            "background-color":
+            "data(groupColor)",
             "border-width": 2,
             "border-color":
               graphTheme.nodeBorder,

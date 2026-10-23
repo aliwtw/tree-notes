@@ -282,3 +282,24 @@ TreeNotes will remain open source on GitHub, enabling the community to:
 * **Overlap:** AI and Backend will collaborate closely from Month 3 onward for endpoint design; Frontend and Database will coordinate for efficient data visualization.
 
 ---
+
+## Speech Recognition
+
+TreeNotes uses a locally hosted Vosk ASR service.
+
+The default Docker build automatically downloads:
+
+vosk-model-small-en-us-0.15
+
+No manual model installation is required.
+
+Start the full TreeNotes stack with:
+
+docker compose up -d --build
+
+The Vosk WebSocket service is exposed locally on:
+
+ws://localhost:2700
+
+The first ASR build may take longer because the language model must
+be downloaded and added to the Docker image.
