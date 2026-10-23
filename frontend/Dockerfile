@@ -1,10 +1,15 @@
-# Stage 1: Use Nginx as a static file server
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
 FROM nginx:alpine
 
-# Copy your frontend files into Nginx's default directory
-COPY . /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expose port 80
 EXPOSE 80
-
-# Nginx runs automatically when container starts

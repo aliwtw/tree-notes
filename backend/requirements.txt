@@ -1,0 +1,15 @@
+fastapi==0.141.1
+uvicorn==0.54.0
+sqlalchemy==2.0.54
+alembic==1.20.0
+psycopg2-binary==2.9.13
+python-dotenv==1.2.3
+requests==2.34.2
+passlib==1.7.4
+bcrypt==4.0.1
+itsdangerous==2.2.0
+email-validator==2.3.0
+# Not imported directly, but pinned because fastapi only sets a minimum version for them
+starlette==1.7.0
+pydantic==2.13.5
+httpx

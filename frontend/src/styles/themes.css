@@ -1,0 +1,884 @@
+/* =========================================================
+   TREENOTES THEME TOKENS
+   ========================================================= */
+
+
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+
+  /* ---------------------------------------------------------
+     Main page surfaces
+     --------------------------------------------------------- */
+
+  --bg-page: #0b1423;
+
+  --bg-page-start: #08111f;
+  --bg-page-mid: #0b1428;
+  --bg-page-end: #111827;
+
+  --bg-navbar: transparent;
+
+  --bg-panel: #111a2b;
+  --bg-panel-secondary: #121c2d;
+  --bg-panel-elevated: #162135;
+  --bg-workspace-canvas: #121c2d;
+
+  --bg-editor: #192335;
+  --bg-toolbar: #172133;
+
+  --bg-input: #19243a;
+  --bg-input-focus: #1d2941;
+
+  --bg-hover: #243149;
+  --bg-hover-soft: rgba(255, 255, 255, 0.05);
+  --bg-hover-strong: rgba(255, 255, 255, 0.06);
+
+
+  /* ---------------------------------------------------------
+     Special surfaces
+     --------------------------------------------------------- */
+
+  --bg-note-card: #151e31;
+  --bg-note-card-hover: #1d2942;
+
+  --bg-auth-card: #0f1323;
+  --bg-auth-input: #090b14;
+
+  --bg-tooltip: #101929;
+
+  --bg-accent-soft: #211a40;
+  --bg-status: #1f2a44;
+
+  --bg-avatar: #e4e5e8;
+
+
+  /* ---------------------------------------------------------
+     Borders
+     --------------------------------------------------------- */
+
+  --border-primary: #2d4668;
+  --border-secondary: #314867;
+
+  --border-subtle: #263a56;
+
+  --border-control: #354765;
+  --border-control-strong: #394260;
+
+  --border-title: #22334d;
+  --border-hover: #304765;
+
+  --border-dashboard: #36577f;
+  --border-graph: #28324a;
+
+  --border-focus: #6864ef;
+
+  --border-accent: #625df0;
+  --border-accent-muted: #4f46e5;
+  --border-accent-strong: #7772ff;
+
+  --border-avatar: #ee706d;
+
+
+  /* ---------------------------------------------------------
+     Text
+     --------------------------------------------------------- */
+
+  --text-primary: #f5f6fb;
+  --text-primary-soft: #eef1f7;
+
+  --text-heading: #f7f8ff;
+
+  --text-body: #dce1eb;
+  --text-secondary: #a5afc1;
+
+  --text-tertiary: #9ca6b8;
+
+  --text-muted: #7f8a9f;
+  --text-muted-light: #8f9bb0;
+
+  --text-placeholder: #747f94;
+
+  --text-on-accent: #ffffff;
+
+  /* Used when text sits on a light surface, such as avatar */
+  --text-on-light: #242839;
+
+  --text-accent: #aaa6ff;
+  --text-link: #8e89ff;
+
+
+  /* ---------------------------------------------------------
+     Primary purple accent
+     --------------------------------------------------------- */
+
+  --accent-primary: #625df0;
+
+  --accent-primary-hover: #706bf5;
+  --accent-primary-hover-bright: #746ff5;
+
+  --accent-primary-active: #5752dc;
+
+  --accent-focus: #6864ef;
+  --accent-focus-strong: #817cff;
+
+  --accent-brand: #6f6ce8;
+
+  --accent-green: #4fd1a1;
+  --accent-red: #ef7d7d;
+
+
+  /* ---------------------------------------------------------
+     Status colours
+     --------------------------------------------------------- */
+
+  --status-info: #58bde8;
+
+  --status-success: #55d39a;
+
+  --status-warning: #f2c94c;
+
+  --status-error: #ef7d7d;
+  --status-error-bright: #ff8e94;
+
+  --status-error-bg:
+    rgba(225, 80, 80, 0.12);
+
+
+  /* Logout / destructive controls */
+
+  --danger-text: #ff9b9b;
+  --danger-icon: #ff7777;
+  --danger-hover-text: #ffb0b0;
+
+
+  /* ---------------------------------------------------------
+     Scrollbars
+     --------------------------------------------------------- */
+   /* Editor scrollbar */
+  --editor-scrollbar-thumb: #34445d;
+  --editor-scrollbar-thumb-hover: #4a5d7a;
+  --scrollbar-thumb-secondary: #35445d;
+
+   /* Page scrollbar */
+  --page-scrollbar-track: #0c1524;
+  --page-scrollbar-thumb: #2f3d52;
+  --page-scrollbar-thumb-hover: #465873;
+    /* ---------------------------------------------------------
+     Toolbar buttons
+     --------------------------------------------------------- */
+
+   --toolbar-button-text: #969eac;
+   --toolbar-button-hover-bg: #243149;
+   --toolbar-button-hover-text: #ffffff;
+
+
+  /* ---------------------------------------------------------
+     Graph View
+     --------------------------------------------------------- */
+
+  --graph-bg-start: #15182f;
+  --graph-bg-mid: #0f1224;
+  --graph-bg-end: #0a0d1a;
+
+  --graph-border: #28324a;
+
+  --graph-control-bg: #0d1525;
+  --graph-control-border: #394260;
+
+  --graph-selected-bg: #211a40;
+
+  --graph-link-mode-bg: #1f2a44;
+  --graph-link-mode-text: #c7d2fe;
+
+  --graph-node-accent: #6366f1;
+  --graph-edge-label: #cbd5e1;
+
+  /* ---------------------------------------------------------
+     Graph nodes / selection / edges
+     --------------------------------------------------------- */
+
+  --graph-node-bg: #6366f1;
+  --graph-node-border: #7772ff;
+  --graph-node-text: #ffffff;
+
+  /* Currently selected node */
+  --graph-selected-border: #4fd1a1;
+  --graph-selected-glow: rgba(79, 209, 161, 0.28);
+  --graph-selected-edge: #4fd1a1;
+
+  /* First node chosen while creating a graph link */
+  --graph-link-source: #f2c94c;
+  --graph-link-source-glow: rgba(242, 201, 76, 0.28);
+
+  /* Normal graph connections */
+  --graph-edge: #465873;
+  --graph-edge-arrow: #6366f1;
+
+
+  /* ---------------------------------------------------------
+     Accessible graph-link palette
+     --------------------------------------------------------- */
+
+  --graph-link-1: #55cddd;
+  --graph-link-2: #f2c94c;
+  --graph-link-3: #ca6be6;
+  --graph-link-4: #ef7d7d;
+
+
+  /* ---------------------------------------------------------
+     Authentication / branding
+     --------------------------------------------------------- */
+
+  --auth-gradient-start: #6966f3;
+  --auth-gradient-end: #2ccc63;
+
+  --auth-button-hover: #5548d8;
+
+  --brand-mark-start: #242073;
+  --brand-mark-end: #101735;
+
+  --brand-green: #54d4a5;
+
+
+  /* ---------------------------------------------------------
+     Focus rings
+     --------------------------------------------------------- */
+
+  --focus-ring:
+    rgba(104, 100, 239, 0.11);
+
+  --focus-ring-soft:
+    rgba(98, 93, 240, 0.10);
+
+  --focus-ring-auth:
+    rgba(110, 104, 255, 0.35);
+
+
+  /* ---------------------------------------------------------
+     Shadows
+     --------------------------------------------------------- */
+
+  --shadow-panel:
+    0 8px 24px rgba(0, 0, 0, 0.08);
+
+  --shadow-popover:
+    0 10px 30px rgba(0, 0, 0, 0.35);
+
+  --shadow-dropdown:
+    0 15px 35px rgba(0, 0, 0, 0.35);
+
+  --shadow-card:
+    0 15px 40px rgba(0, 0, 0, 0.45);
+
+   /* ---------------------------------------------------------
+     Welcome Illustration
+     --------------------------------------------------------- */
+
+   --welcome-image-opacity: 0.34;
+   --welcome-image-filter:
+   saturate(0.8) brightness(0.72);
+}
+
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+
+[data-theme="light"] {
+  color-scheme: light;
+
+
+  /* ---------------------------------------------------------
+     Main page surfaces
+     --------------------------------------------------------- */
+
+  --bg-page: #f5f7fb;
+
+  --bg-page-start: #f7f9fc;
+  --bg-page-mid: #f2f5fa;
+  --bg-page-end: #eaf0f7;
+
+  --bg-navbar: #ffffff;
+
+  --bg-panel: #ffffff;
+  --bg-panel-secondary: #f8fafc;
+  --bg-panel-elevated: #f3f6fb;
+  --bg-workspace-canvas: #f8fafc;
+
+  --bg-editor: #f7f9fc;
+  --bg-toolbar: #eef2f7;
+
+  --bg-input: #f1f5f9;
+  --bg-input-focus: #ffffff;
+
+  --bg-hover: #e8edf5;
+  --bg-hover-soft: rgba(31, 41, 55, 0.05);
+  --bg-hover-strong: rgba(31, 41, 55, 0.08);
+
+
+  /* ---------------------------------------------------------
+     Special surfaces
+     --------------------------------------------------------- */
+
+  --bg-note-card: #ffffff;
+  --bg-note-card-hover: #f1f5fb;
+
+  --bg-auth-card: #ffffff;
+  --bg-auth-input: #f7f9fc;
+
+  --bg-tooltip: #ffffff;
+
+  --bg-accent-soft: #efefff;
+  --bg-status: #eef2ff;
+
+  --bg-avatar: #f2f3f5;
+
+
+  /* ---------------------------------------------------------
+     Borders
+     --------------------------------------------------------- */
+
+  --border-primary: #c7d1df;
+  --border-secondary: #d4dce7;
+
+  --border-subtle: #e1e7ef;
+
+  --border-control: #c9d3e1;
+  --border-control-strong: #b7c3d3;
+
+  --border-title: #d6deea;
+  --border-hover: #aebdd0;
+
+  --border-dashboard: #b7c6da;
+  --border-graph: #ccd6e4;
+
+  --border-focus: #625df0;
+
+  --border-accent: #625df0;
+  --border-accent-muted: #716cff;
+  --border-accent-strong: #514bcc;
+
+  --border-avatar: #ee706d;
+
+
+  /* ---------------------------------------------------------
+     Text
+     --------------------------------------------------------- */
+
+  --text-primary: #182033;
+  --text-primary-soft: #263247;
+
+  --text-heading: #101828;
+
+  --text-body: #3f4b61;
+  --text-secondary: #596579;
+
+  --text-tertiary: #667085;
+
+  --text-muted: #778399;
+  --text-muted-light: #68758a;
+
+  --text-placeholder: #8a94a6;
+
+  --text-on-accent: #ffffff;
+
+  --text-on-light: #242839;
+
+  --text-accent: #514bcc;
+  --text-link: #514bcc;
+
+
+  /* ---------------------------------------------------------
+     Primary purple accent
+     --------------------------------------------------------- */
+
+  --accent-primary: #625df0;
+
+  --accent-primary-hover: #706bf5;
+  /*  --accent-primary-hover: #514bcc old one
+  */
+  --accent-primary-hover-bright: #6f6ce8;
+
+  --accent-primary-active: #4338ca;
+
+  --accent-focus: #625df0;
+  --accent-focus-strong: #4f46e5;
+
+  --accent-brand: #5b57d9;
+
+  --accent-green: #16865e;
+  --accent-red: #c53c3c;
+
+
+  /* ---------------------------------------------------------
+     Status colours
+     --------------------------------------------------------- */
+
+  --status-info: #1677a6;
+
+  --status-success: #16865e;
+
+  --status-warning: #9a6500;
+
+  --status-error: #c53c3c;
+  --status-error-bright: #b42318;
+
+  --status-error-bg:
+    rgba(197, 60, 60, 0.10);
+
+
+  --danger-text: #b42318;
+  --danger-icon: #c4322b;
+  --danger-hover-text: #912018;
+
+
+  /* ---------------------------------------------------------
+     Scrollbars
+     --------------------------------------------------------- */
+   /* Editor scrollbar */
+  --editor-scrollbar-thumb: #aeb9c8;
+  --editor-scrollbar-thumb-hover: #8e9bab;
+  --scrollbar-thumb-secondary: #c3ccd8;
+
+   /* Page scrollbar */
+  --page-scrollbar-track: #edf2f7;
+  --page-scrollbar-thumb: #b3bfce;
+  --page-scrollbar-thumb-hover: #929fb0;
+
+      /* ---------------------------------------------------------
+     Toolbar buttons
+     --------------------------------------------------------- */
+
+   --toolbar-button-text: #667085;
+   --toolbar-button-hover-bg: #625df0;
+   --toolbar-button-hover-text: #ffffff;
+
+  /* ---------------------------------------------------------
+     Graph View
+     --------------------------------------------------------- */
+
+  --graph-bg-start: #fbfcfe;
+  --graph-bg-mid: #f5f8fc;
+  --graph-bg-end: #edf2f7;
+
+  --graph-border: #ccd6e4;
+
+  --graph-control-bg: #ffffff;
+  --graph-control-border: #c7d1df;
+
+  --graph-selected-bg: #efefff;
+
+  --graph-link-mode-bg: #eef2ff;
+  --graph-link-mode-text: #4338ca;
+
+  --graph-node-accent: #625df0;
+  --graph-edge-label: #334155;
+
+  /* ---------------------------------------------------------
+     Graph nodes / selection / edges
+     --------------------------------------------------------- */
+
+  --graph-node-bg: #625df0;
+  --graph-node-border: #514bcc;
+  --graph-node-text: #ffffff;
+
+  /* Currently selected node */
+  --graph-selected-border: #16865e;
+  --graph-selected-glow: rgba(22, 134, 94, 0.22);
+  --graph-selected-edge: #16865e;
+
+  /* First node chosen while creating a graph link */
+  --graph-link-source: #9a6500;
+  --graph-link-source-glow: rgba(154, 101, 0, 0.20);
+
+  /* Normal graph connections */
+  --graph-edge: #78869b;
+  --graph-edge-arrow: #625df0;
+
+
+  /* ---------------------------------------------------------
+     Accessible graph-link palette
+     --------------------------------------------------------- */
+
+  --graph-link-1: #1677a6;
+  --graph-link-2: #9a6500;
+  --graph-link-3: #8a4fa3;
+  --graph-link-4: #c53c3c;
+
+
+  /* ---------------------------------------------------------
+     Authentication / branding
+     --------------------------------------------------------- */
+
+  --auth-gradient-start: #625df0;
+  --auth-gradient-end: #25b95a;
+
+  --auth-button-hover: #514bcc;
+
+  /*
+    Logo colours can remain brand-oriented even
+    when the surrounding UI becomes light.
+  */
+  --brand-mark-start: #eeedff;
+  --brand-mark-end: #e4eaff;
+
+  --brand-green: #16865e;
+
+
+  /* ---------------------------------------------------------
+     Focus rings
+     --------------------------------------------------------- */
+
+  --focus-ring:
+    rgba(98, 93, 240, 0.18);
+
+  --focus-ring-soft:
+    rgba(98, 93, 240, 0.12);
+
+  --focus-ring-auth:
+    rgba(98, 93, 240, 0.20);
+
+
+  /* ---------------------------------------------------------
+     Shadows
+     --------------------------------------------------------- */
+
+  --shadow-panel:
+    0 8px 24px rgba(25, 40, 65, 0.08);
+
+  --shadow-popover:
+    0 10px 30px rgba(25, 40, 65, 0.16);
+
+  --shadow-dropdown:
+    0 15px 35px rgba(25, 40, 65, 0.14);
+
+  --shadow-card:
+    0 15px 40px rgba(25, 40, 65, 0.15);
+
+   /* ---------------------------------------------------------
+     Welcome Illustration
+     --------------------------------------------------------- */
+
+   --welcome-image-opacity: 0.58;
+   --welcome-image-filter:
+   saturate(0.85) brightness(0.9);
+}
+
+/* =========================================================
+   COLOUR VISION ACCESSIBILITY
+
+   These modes sit ON TOP of the normal light/dark theme.
+
+   Example:
+   <html
+     data-theme="dark"
+     data-color-vision="deuteranopia"
+   >
+
+   "standard" needs no overrides because it simply uses
+   the normal light/dark theme colours above.
+   ========================================================= */
+
+
+/* =========================================================
+   DEUTERANOPIA
+   Reduced green sensitivity
+
+   Avoid using red vs green as the main distinction.
+   Blue / orange / purple are used more heavily.
+   ========================================================= */
+
+
+/* DARK */
+
+
+html[data-theme="dark"][data-color-vision="deuteranopia"] {
+
+  /* Status */
+
+  --status-info: #cc79a7;
+  --status-success: #56b4e9;
+  --status-warning: #f0b84b;
+  --status-error: #f08045;
+  --status-error-bright: #ff9a66;
+
+  --status-error-bg:
+    rgba(240, 128, 69, 0.14);
+
+
+  /* Older semantic accent tokens */
+
+  --accent-green: #56b4e9;
+  --accent-red: #f08045;
+
+
+  /* Destructive actions */
+
+  --danger-text: #ff9a66;
+  --danger-icon: #f08045;
+  --danger-hover-text: #ffb28c;
+
+
+  /* Graph / Raw Notes accessibility colours */
+
+  /* Selected = blue, link source = orange.
+     These remain distinguishable without red/green contrast. */
+  --graph-selected-border: #56b4e9;
+  --graph-selected-glow: rgba(86, 180, 233, 0.30);
+  --graph-selected-edge: #56b4e9;
+
+  --graph-link-source: #e69f00;
+  --graph-link-source-glow: rgba(230, 159, 0, 0.30);
+
+  --graph-edge: #66758c;
+  --graph-edge-arrow: #8da6ff;
+
+  --graph-link-1: #56b4e9;
+  --graph-link-2: #f0b84b;
+  --graph-link-3: #cc79a7;
+  --graph-link-4: #e8e8e8;
+}
+
+
+/* LIGHT */
+
+html[data-theme="light"][data-color-vision="deuteranopia"] {
+
+  --status-info: #8c4f7c;
+  --status-success: #0072b2;
+  --status-warning: #9a6500;
+  --status-error: #b84a00;
+  --status-error-bright: #9d3e00;
+
+  --status-error-bg:
+    rgba(184, 74, 0, 0.10);
+
+
+  --accent-green: #0072b2;
+  --accent-red: #b84a00;
+
+
+  --danger-text: #9d3e00;
+  --danger-icon: #b84a00;
+  --danger-hover-text: #7e3200;
+
+
+  /* Graph / Raw Notes accessibility colours */
+
+  /* Selected = blue, link source = orange. */
+  --graph-selected-border: #0072b2;
+  --graph-selected-glow: rgba(0, 114, 178, 0.22);
+  --graph-selected-edge: #0072b2;
+
+  --graph-link-source: #a85f00;
+  --graph-link-source-glow: rgba(168, 95, 0, 0.20);
+
+  --graph-edge: #6b7788;
+  --graph-edge-arrow: #526fc7;
+
+  --graph-link-1: #0072b2;
+  --graph-link-2: #9a6500;
+  --graph-link-3: #8c4f7c;
+  --graph-link-4: #4f5968;
+}
+
+
+
+/* =========================================================
+   PROTANOPIA
+   Reduced red sensitivity
+
+   Blue, cyan, amber and magenta provide stronger
+   separation than red / green pairs.
+   ========================================================= */
+
+
+/* DARK */
+
+html[data-theme="dark"][data-color-vision="protanopia"] {
+
+  --status-info: #a78bfa;
+  --status-success: #67c5e8;
+  --status-warning: #f4bd61;
+  --status-error: #e879b7;
+  --status-error-bright: #f59acb;
+
+  --status-error-bg:
+    rgba(232, 121, 183, 0.14);
+
+
+  --accent-green: #67c5e8;
+  --accent-red: #e879b7;
+
+
+  --danger-text: #f59acb;
+  --danger-icon: #e879b7;
+  --danger-hover-text: #ffc0df;
+
+
+  /* Graph / Raw Notes accessibility colours */
+
+  /* Selected = cyan-blue, link source = amber.
+     This avoids using red/green as the state distinction. */
+  --graph-selected-border: #4db8ff;
+  --graph-selected-glow: rgba(77, 184, 255, 0.30);
+  --graph-selected-edge: #4db8ff;
+
+  --graph-link-source: #f0a202;
+  --graph-link-source-glow: rgba(240, 162, 2, 0.30);
+
+  --graph-edge: #66758c;
+  --graph-edge-arrow: #8da6ff;
+
+  --graph-link-1: #67c5e8;
+  --graph-link-2: #f4bd61;
+  --graph-link-3: #e879b7;
+  --graph-link-4: #a78bfa;
+}
+
+
+/* LIGHT */
+
+html[data-theme="light"][data-color-vision="protanopia"] {
+
+  --status-info: #6554b8;
+  --status-success: #16779b;
+  --status-warning: #926000;
+  --status-error: #a8447c;
+  --status-error-bright: #8f3468;
+
+  --status-error-bg:
+    rgba(168, 68, 124, 0.10);
+
+
+  --accent-green: #16779b;
+  --accent-red: #a8447c;
+
+
+  --danger-text: #8f3468;
+  --danger-icon: #a8447c;
+  --danger-hover-text: #752753;
+
+
+  /* Graph / Raw Notes accessibility colours */
+
+  /* Selected = cyan-blue, link source = amber. */
+  --graph-selected-border: #16779b;
+  --graph-selected-glow: rgba(22, 119, 155, 0.22);
+  --graph-selected-edge: #16779b;
+
+  --graph-link-source: #9b6400;
+  --graph-link-source-glow: rgba(155, 100, 0, 0.20);
+
+  --graph-edge: #6b7788;
+  --graph-edge-arrow: #526fc7;
+
+  --graph-link-1: #16779b;
+  --graph-link-2: #926000;
+  --graph-link-3: #a8447c;
+  --graph-link-4: #6554b8;
+}
+
+
+
+/* =========================================================
+   TRITANOPIA
+   Reduced blue sensitivity
+
+   Avoid relying on blue vs yellow distinctions.
+   Red, green and magenta become the primary
+   semantic differentiators.
+   ========================================================= */
+
+
+/* DARK */
+
+html[data-theme="dark"][data-color-vision="tritanopia"] {
+
+  --status-info: #d58bd2;
+  --status-success: #63d19e;
+  --status-warning: #ef9d67;
+  --status-error: #ef7474;
+  --status-error-bright: #ff9696;
+
+  --status-error-bg:
+    rgba(239, 116, 116, 0.14);
+
+
+  --accent-green: #63d19e;
+  --accent-red: #ef7474;
+
+
+  --danger-text: #ff9696;
+  --danger-icon: #ef7474;
+  --danger-hover-text: #ffb5b5;
+
+
+  /* Graph / Raw Notes accessibility colours */
+
+  /* Tritanopia should not depend on blue/yellow contrast.
+     Selected = green-teal, link source = warm coral. */
+  --graph-selected-border: #00c896;
+  --graph-selected-glow: rgba(0, 200, 150, 0.30);
+  --graph-selected-edge: #00c896;
+
+  --graph-link-source: #ff7a7a;
+  --graph-link-source-glow: rgba(255, 122, 122, 0.30);
+
+  --graph-edge: #66758c;
+  --graph-edge-arrow: #d58bd2;
+
+  --graph-link-1: #63d19e;
+  --graph-link-2: #ef9d67;
+  --graph-link-3: #d58bd2;
+  --graph-link-4: #ef7474;
+}
+
+
+/* LIGHT */
+
+html[data-theme="light"][data-color-vision="tritanopia"] {
+
+  --status-info: #965891;
+  --status-success: #18754f;
+  --status-warning: #a34f20;
+  --status-error: #b63d48;
+  --status-error-bright: #982f39;
+
+  --status-error-bg:
+    rgba(182, 61, 72, 0.10);
+
+
+  --accent-green: #18754f;
+  --accent-red: #b63d48;
+
+
+  --danger-text: #982f39;
+  --danger-icon: #b63d48;
+  --danger-hover-text: #7d2630;
+
+
+  /* Graph / Raw Notes accessibility colours */
+
+  /* Selected = green, link source = red/coral. */
+  --graph-selected-border: #18754f;
+  --graph-selected-glow: rgba(24, 117, 79, 0.22);
+  --graph-selected-edge: #18754f;
+
+  --graph-link-source: #b63d48;
+  --graph-link-source-glow: rgba(182, 61, 72, 0.20);
+
+  --graph-edge: #6b7788;
+  --graph-edge-arrow: #965891;
+
+  --graph-link-1: #18754f;
+  --graph-link-2: #a34f20;
+  --graph-link-3: #965891;
+  --graph-link-4: #b63d48;
+}
