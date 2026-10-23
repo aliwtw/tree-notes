@@ -87,7 +87,7 @@ services:
     image: ollama/ollama:0.33.0
     container_name: ollama
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     environment:
       OLLAMA_LLM_LIBRARY: cpu_avx2
     volumes:
@@ -134,7 +134,7 @@ services:
         condition: service_completed_successfully
     container_name: asr
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     env_file:
       - .env
     environment:
