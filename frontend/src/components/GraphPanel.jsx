@@ -101,7 +101,7 @@ const AI_PROCESSING_MOCK_STEPS = [
     content: "Condition node: conditional, owner=Lizards\nProposition edges: standard\nALLOWS edge: reification\nNo qualifier or negative/affirmative classification detected.",
   },
 ];
-const SHOW_AI_PROCESSING_MOCK = true;
+const SHOW_AI_PROCESSING_MOCK = false;
 
 /* =========================================================
    GRAPH THEME HELPERS
@@ -122,23 +122,6 @@ function getThemeColour(variableName, fallback) {
   return value || fallback;
 }
 
-function getGraphThemeColours() {
-  return {
-    nodeBackground: getThemeColour("--graph-node-bg", "#6366F1"),
-    nodeBorder: getThemeColour("--graph-node-border", "#818CF8"),
-    nodeText: getThemeColour("--graph-node-text", "#ffffff"),
-    selectedBorder: getThemeColour("--graph-selected-border", "#41d19f"),
-    selectedGlow: getThemeColour("--graph-selected-glow", "rgba(65, 209, 159, 0.28)"),
-    edge: getThemeColour("--graph-edge", "#475569"),
-
-    /*
-      Use graph-link palette colour 2 for
-      "first node selected while linking".
-    */
-
-    linkSource: getThemeColour("--graph-link-2", "#f2c94c"),
-  };
-}
 const NODE_SHAPES = [
   {
     value: "ellipse",
@@ -305,23 +288,6 @@ function getThemeContrastColour() {
 
 function getConditionalDefaultBorderColour() {
   return getThemeContrastColour();
-}
-
-function getReadableTextColour(background) {
-  const value = String(background || "")
-    .trim()
-    .replace(/^#/, "");
-  if (!/^[0-9a-f]{6}$/i.test(value)) {
-    return "#ffffff";
-  }
-  const red = Number.parseInt(value.slice(0, 2), 16);
-  const green = Number.parseInt(value.slice(2, 4), 16);
-  const blue = Number.parseInt(value.slice(4, 6), 16);
-  const luminance = (0.2126 * red +
-    0.7152 * green +
-    0.0722 * blue) /
-    255;
-  return luminance > 0.62 ? "#111827" : "#ffffff";
 }
 
 function normaliseNodeType(value, conditionOwnerId = "") {
@@ -1500,80 +1466,225 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
     };
   }, [noteId]);
   async function generateGraph() {
-    if (!rawNotes || rawNotes.trim() === "") {
+    // =======================================================
+    // VALIDATE NOTES
+    // =======================================================
+    const notes = rawNotes?.trim();
+    if (!notes) {
       setError("Please write some notes before generating a graph.");
       return;
     }
-
+    // =======================================================
+    // CANCEL ANY PREVIOUS STREAM
+    // =======================================================
+    if (graphStreamAbortRef.current) {
+      graphStreamAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    graphStreamAbortRef.current = controller;
     setLoading(true);
     setError("");
-
     try {
-      const response = await fetch("/api/graph", {
+      // =====================================================
+      // START STREAMING REQUEST
+      // =====================================================
+      const response = await fetch("/api/graph/stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
+        signal: controller.signal,
         body: JSON.stringify({
-          rawNotes: rawNotes,
+          noteId: noteId ?? null,
+
+          /*
+            IMPORTANT:
+
+            rawNotes should already be the plain-text
+            representation supplied by NoteWorkspace.
+
+            Do not send notes_section_html here.
+          */
+
+          rawNotes: notes,
         }),
       });
-
-      let data = {};
-
-      try {
-        data = await response.json();
-      } catch {
-        // Leave data empty so the fallback error below can be used.
-      }
-
+      // =====================================================
+      // HTTP-LEVEL ERRORS
+      // =====================================================
       if (!response.ok) {
-        let message =
-          "Graph generation failed. Please try again.";
-
-        if (typeof data?.detail === "string") {
-          message = data.detail;
-        } else if (Array.isArray(data?.detail)) {
-          message = data.detail
-            .map((item) =>
-              String(item.msg).replace(
-                /^Value error, /,
-                ""
-              )
-            )
-            .join(" ");
+        let message = "Graph generation failed. Please try again.";
+        try {
+          const contentType = response.headers.get("content-type") || "";
+          if (contentType.includes("application/json")) {
+            const data = await response.json();
+            if (typeof data?.detail === "string") {
+              message = data.detail;
+            } else if (Array.isArray(data?.detail)) {
+              message = data.detail
+                  .map((item) => String(item.msg)
+                    .replace(/^Value error, /, ""))
+                  .join(" ");
+            } else if (typeof data?.message === "string") {
+              message = data.message;
+            }
+          } else {
+            const text = await response.text();
+            if (text.trim()) {
+              message = text.trim();
+            }
+          }
         }
+        catch {
 
+          /*
+            Keep the normal fallback error message
+            if the server response cannot be parsed.
+          */
+
+        }
         throw new Error(message);
       }
+      // =====================================================
+      // MAKE SURE THE BROWSER GAVE US A STREAM
+      // =====================================================
+      if (!response.body) {
+        throw new Error("Graph streaming is not available in this browser.");
+      }
+      // =====================================================
+      // CREATE STREAM READER
+      // =====================================================
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
 
       /*
-        Replace the current graph with the completed
-        graph returned by the backend.
+        Network chunks do NOT necessarily line up with
+        JSON objects.
+
+        For example, one chunk could contain:
+
+          {"type":"no
+
+        and the next:
+
+          de","data":...}\n
+
+        So we keep incomplete text here until a newline
+        tells us that one complete NDJSON event exists.
       */
-      setGraphData({
-        nodes: Array.isArray(data?.nodes)
-          ? data.nodes
-          : [],
-        edges: Array.isArray(data?.edges)
-          ? data.edges
-          : [],
-      });
 
-    } catch (error) {
-      console.error(
-        "Graph generation error:",
-        error
-      );
+      let buffer = "";
+      // =====================================================
+      // READ STREAM
+      // =====================================================
+      while (true) {
+        const { value, done, } = await reader.read();
+        if (done) {
+          break;
+        }
 
-      setError(
-        error.message ||
-          "Unable to generate graph. Please try again."
-      );
+        /*
+          Convert the Uint8Array network chunk into text.
 
-    } finally {
-      setLoading(false);
+          stream: true tells TextDecoder that the next
+          chunk may continue a character from this one.
+        */
+
+        buffer += decoder.decode(value, {
+            stream: true,
+          });
+
+        /*
+          One chunk may contain:
+
+            one event
+            several events
+            part of an event
+
+          Split only on newline boundaries.
+        */
+
+        const lines = buffer.split("\n");
+
+        /*
+          The final item might be incomplete.
+
+          Keep it in the buffer for the next read.
+        */
+
+        buffer = lines.pop() ?? "";
+        for (const rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line) {
+            continue;
+          }
+          try {
+            const event = JSON.parse(line);
+
+            /*
+              This is the function we already tested
+              using testGraphStreaming().
+            */
+
+            handleGraphStreamEvent(event);
+          }
+          catch (parseError) {
+            console.error("Unable to parse graph stream event:", line, parseError);
+          }
+        }
+      }
+      // =====================================================
+      // FLUSH TEXTDECODER
+      // =====================================================
+      buffer += decoder.decode();
+
+      /*
+        Usually every backend event ends in \\n.
+
+        This fallback lets us safely process a final JSON
+        event even if the final newline was omitted.
+      */
+
+      const finalLine = buffer.trim();
+      if (finalLine) {
+        try {
+          const finalEvent = JSON.parse(finalLine);
+          handleGraphStreamEvent(finalEvent);
+        }
+        catch (parseError) {
+          console.error("Unable to parse final graph stream event:", finalLine, parseError);
+        }
+      }
+    }
+    catch (error) {
+      // =====================================================
+      // REQUEST CANCELLED
+      // =====================================================
+      if (error?.name === "AbortError") {
+        console.log("Graph generation stream cancelled.");
+        return;
+      }
+      // =====================================================
+      // REQUEST FAILED
+      // =====================================================
+      console.error("Graph generation error:", error);
+      setError(error?.message || "Unable to generate graph. Please try again.");
+    }
+    finally {
+
+      /*
+        Only clear the ref if this is still the
+        currently active request.
+
+        This matters if another request was started
+        while an older request was shutting down.
+      */
+
+      if (graphStreamAbortRef.current === controller) {
+        graphStreamAbortRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
@@ -4674,6 +4785,370 @@ const GraphPanel = forwardRef(function GraphPanel({ rawNotes, selectedText, addN
         "underlay-padding": 6,
       })
       .update();
+  }
+
+  function addStreamEdge(edgeData) {
+    const cy = cyRef.current;
+    if (!cy || !edgeData) {
+      return false;
+    }
+    edgeData = normaliseIncomingEdgeData(edgeData);
+    const sourceId = String(edgeData.source ?? "");
+    const targetId = String(edgeData.target ?? "");
+    if (!sourceId || !targetId) {
+      console.warn("Streamed edge is missing source/target:", edgeData);
+      return false;
+    }
+    const sourceNode = cy.getElementById(sourceId);
+    const targetNode = cy.getElementById(targetId);
+
+    /*
+      An edge cannot safely be added until both
+      of its nodes exist.
+    */
+
+    if (sourceNode.empty() || targetNode.empty()) {
+      return false;
+    }
+
+    /*
+      Hans should ideally provide edge IDs.
+
+      This fallback gives us something usable
+      during development if he doesn't yet.
+    */
+
+    const edgeId = String(edgeData.id || `ai-edge-${sourceId}-${targetId}-${edgeData.relationship || "link"}`);
+    const existing = cy.getElementById(edgeId);
+
+    /*
+      If this edge already exists, update it
+      instead of creating a duplicate.
+    */
+
+    if (!existing.empty()) {
+      existing.data({
+        ...existing.data(),
+        ...edgeData,
+        id: edgeId,
+        source: sourceId,
+        target: targetId,
+      });
+      syncConditionalGraphSemantics(cy);
+      return true;
+    }
+    cy.add({
+      group: "edges",
+      data: {
+        ...edgeData,
+        id: edgeId,
+        source: sourceId,
+        target: targetId,
+      },
+    });
+    syncConditionalGraphSemantics(cy);
+    return true;
+  }
+
+  function getStreamNodePosition() {
+    const cy = cyRef.current;
+    if (!cy) {
+      return {
+        x: 0,
+        y: 0,
+      };
+    }
+
+    /*
+      On the first streamed node, capture the centre
+      of the currently visible Cytoscape viewport.
+
+      All subsequent temporary positions are based
+      around this point.
+    */
+
+    if (!streamAnchorRef.current) {
+      const extent = cy.extent();
+      streamAnchorRef.current = {
+        x: (extent.x1 + extent.x2) / 2,
+        y: (extent.y1 + extent.y2) / 2,
+      };
+    }
+    const anchor = streamAnchorRef.current;
+    const index = streamNodeIndexRef.current++;
+
+    /*
+      First node goes directly into the centre.
+    */
+
+    if (index === 0) {
+      return {
+        ...anchor,
+      };
+    }
+
+    /*
+      Place later nodes in a loose spiral.
+
+      These are ONLY temporary positions while
+      generation is underway.
+    */
+
+    const goldenAngle = 137.508 * (Math.PI / 180);
+    const angle = index * goldenAngle;
+    const radius = 90 + Math.sqrt(index) * 65;
+    return {
+      x: anchor.x +
+        Math.cos(angle) * radius,
+      y: anchor.y +
+        Math.sin(angle) * radius,
+    };
+  }
+
+  function focusStreamElements(elements) {
+    const cy = cyRef.current;
+    if (!cy || !elements || elements.empty()) {
+      return;
+    }
+
+    /*
+      Stop any previous viewport animation so a newly
+      streamed element immediately becomes the focus.
+    */
+
+    cy.stop();
+
+    /*
+      Keep a fairly stable viewing zoom during streaming.
+
+      We don't want every individual node to fill the
+      entire Graph View.
+    */
+
+    const focusZoom = Math.min(Math.max(cy.zoom(), 0.95), 1.15);
+    cy.animate({
+      center: {
+        eles: elements,
+      },
+      zoom: focusZoom,
+    }, {
+      duration: 350,
+      easing: "ease-in-out-cubic",
+    });
+  }
+
+  function flushPendingStreamEdges() {
+    const cy = cyRef.current;
+    if (!cy || pendingStreamEdgesRef.current.length === 0) {
+      return;
+    }
+    const stillPending = [];
+    for (const edgeData of pendingStreamEdgesRef.current) {
+      const added = addStreamEdge(edgeData);
+      if (!added) {
+        stillPending.push(edgeData);
+      }
+    }
+    pendingStreamEdgesRef.current = stillPending;
+  }
+
+  function handleGraphStreamEvent(event) {
+    const cy = cyRef.current;
+    if (!cy || !event) {
+      return;
+    }
+    console.log("Graph stream event:", event);
+    switch (event.type) {
+      // =====================================================
+      // STREAM STARTED
+      // =====================================================
+      case "start": {
+
+        /*
+          Generate Graph currently replaces the existing
+          generated graph, so preserve that behaviour.
+
+          We clear the graph once when the stream begins,
+          NOT every time an element arrives.
+        */
+
+        cy.elements().remove();
+        pendingStreamEdgesRef.current = [];
+        streamAnchorRef.current = null;
+        streamNodeIndexRef.current = 0;
+        cy.elements().unselect();
+        setSelectedNode(null);
+        setSelectedEdge(null);
+        setSelectionSummary({
+          nodes: [],
+          edges: [],
+        });
+        setShapeMenuOpen(false);
+        setNodeBorderStyleMenuOpen(false);
+        setEdgeStyleMenuOpen(false);
+        setArrowShapeMenuOpen(false);
+        setGraphFeedback(null);
+        console.log("AI graph stream started.");
+        break;
+      }
+      // =====================================================
+      // STREAMED NODE
+      // =====================================================
+      case "node": {
+        const nodeData = normaliseIncomingNodeData(event.data || {});
+        if (!nodeData?.id) {
+          console.warn("Streamed node has no id:", event);
+          break;
+        }
+        const nodeId = String(nodeData.id);
+        const existingNode = cy.getElementById(nodeId);
+        let node;
+
+        /*
+          Update existing node if the backend repeats
+          or enriches it later in the stream.
+        */
+
+        if (!existingNode.empty()) {
+          existingNode.data({
+            ...existingNode.data(),
+            ...nodeData,
+            id: nodeId,
+          });
+          node = existingNode;
+        } else {
+          node = cy.add({
+              group: "nodes",
+              data: {
+                ...nodeData,
+                id: nodeId,
+                label: nodeData.label || nodeId,
+              },
+
+              /*
+                Give the new node a temporary stable position.
+
+                Existing streamed nodes are NOT rearranged.
+              */
+
+              position: getStreamNodePosition(),
+            });
+        }
+
+        /*
+          Apply TreeNotes' existing automatic node sizing.
+        */
+
+        resizeNodeToLabel(node);
+
+        /*
+          A newly arrived node might unlock an edge that
+          had to wait for this endpoint.
+        */
+
+        flushPendingStreamEdges();
+        syncConditionalGraphSemantics(cy);
+        cy.style().update();
+
+        /*
+          Smoothly move the viewport to the node
+          that has just appeared.
+        */
+
+        focusStreamElements(node);
+        break;
+      }
+      // =====================================================
+      // STREAMED EDGE
+      // =====================================================
+      case "edge": {
+        const incomingEdgeData = event.data;
+        if (!incomingEdgeData) {
+          break;
+        }
+        const expandedEdges = expandIncomingEdgeData(incomingEdgeData);
+        for (const edgeData of expandedEdges) {
+          const added = addStreamEdge(edgeData);
+
+          /*
+            If the required nodes have not arrived yet,
+            hold this edge temporarily.
+          */
+
+          if (!added) {
+            const pendingId = edgeData.id;
+            const alreadyWaiting = pendingStreamEdgesRef.current
+              .some((edge) => pendingId && edge.id === pendingId);
+            if (!alreadyWaiting) {
+              pendingStreamEdgesRef.current.push(edgeData);
+            }
+            continue;
+          }
+          const sourceNode = cy.getElementById(String(edgeData.source));
+          const targetNode = cy.getElementById(String(edgeData.target));
+          if (!sourceNode.empty() && !targetNode.empty()) {
+            const connectedNodes = sourceNode.union(targetNode);
+            focusStreamElements(connectedNodes);
+          }
+        }
+        syncConditionalGraphSemantics(cy);
+        syncParallelEdgeRouting(cy);
+        break;
+      }
+      // =====================================================
+      // OPTIONAL STATUS MESSAGE
+      // =====================================================
+      case "status": {
+        console.log("AI graph status:", event.message);
+        break;
+      }
+      // =====================================================
+      // STREAM COMPLETE
+      // =====================================================
+      case "done": {
+        flushPendingStreamEdges();
+        if (pendingStreamEdgesRef.current.length > 0) {
+          console.warn("Graph stream finished with unresolved edges:", pendingStreamEdgesRef.current);
+        }
+        syncConditionalGraphSemantics(cy);
+        syncParallelEdgeRouting(cy);
+
+        /*
+          Final layout now that the complete graph
+          has arrived.
+        */
+
+        if (!cy.elements().empty()) {
+          runCompactGraphLayout(cy, {
+            animate: true,
+            padding: 50,
+            randomize: true,
+          });
+        }
+        requestAnimationFrame(() => {
+            syncConditionalGraphSemantics(cy);
+            syncParallelEdgeRouting(cy);
+            syncEdgeLabelGeometry(cy);
+        });
+        const semanticNodeCount = cy.nodes().filter(node => !node.data("graphInternal")).length;
+        const semanticEdgeCount = cy.edges().filter(edge => !edge.data("graphInternal")).length;
+        showGraphFeedback(`Graph generated: ${semanticNodeCount} nodes, ${semanticEdgeCount} links`, "success");
+        console.log("AI graph stream complete.");
+        break;
+      }
+      // =====================================================
+      // STREAM ERROR
+      // =====================================================
+      case "error": {
+        const message = event.message || "Unable to generate graph.";
+        setError(message);
+        console.error("AI graph stream error:", message);
+        break;
+      }
+      default: {
+        console.warn("Unknown graph stream event:", event);
+      }
+    }
   }
   // =========================================================
   // CYTOSCAPE INITIALISATION
